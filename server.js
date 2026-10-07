@@ -162,57 +162,90 @@ function melangerTableau(arr) {
     return copie;
 }
 
-function genererVers(motsCles, theme, index) {
-    const structures = [
-        () => {
-            const sujet = theme.mots[Math.floor(Math.random() * theme.mots.length)];
-            const verbe = banques.verbes[Math.floor(Math.random() * banques.verbes.length)];
-            const adj = banques.adjectifs[Math.floor(Math.random() * banques.adjectifs.length)];
-            return `${sujet.charAt(0).toUpperCase() + sujet.slice(1)} ${verbe}, ${adj} et libre,`;
-        },
-        () => {
-            const image = banques.images[Math.floor(Math.random() * banques.images.length)];
-            const motCle = motsCles[Math.floor(Math.random() * motsCles.length)] || 'rêve';
-            return `${image.charAt(0).toUpperCase() + image.slice(1)},\nPortant en soi l'essence du ${motCle}.`;
-        },
-        () => {
-            const lieu = banques.lieux[Math.floor(Math.random() * banques.lieux.length)];
-            const emotion = banques.emotions[Math.floor(Math.random() * banques.emotions.length)];
-            const motCle = motsCles[Math.floor(Math.random() * motsCles.length)] || 'âme';
-            return `${lieu.charAt(0).toUpperCase() + lieu.slice(1)},\nOù ${emotion} rencontre le ${motCle}.`;
-        },
-        () => {
-            const connecteur = banques.connecteurs[Math.floor(Math.random() * banques.connecteurs.length)];
-            const sujet = theme.mots[Math.floor(Math.random() * theme.mots.length)];
-            const verbe = banques.verbes[Math.floor(Math.random() * banques.verbes.length)];
-            const adj = banques.adjectifs[Math.floor(Math.random() * banques.adjectifs.length)];
-            return `${connecteur} ${sujet} ${verbe}, ${adj} comme l'aurore,`;
-        },
-        () => {
-            const motCle = motsCles[Math.floor(Math.random() * motsCles.length)] || 'temps';
-            const verbe = banques.verbes[Math.floor(Math.random() * banques.verbes.length)];
-            const adj = banques.adjectifs[Math.floor(Math.random() * banques.adjectifs.length)];
-            return `Le ${motCle} ${verbe}, ${adj} et souverain,`;
-        },
-        () => {
-            const versTheme = theme.vers[Math.floor(Math.random() * theme.vers.length)];
-            return versTheme;
+function genererVers(motsCles, theme, index, usedPhrases) {
+    let phrase = "";
+    let attempts = 0;
+    
+    // Éviter les répétitions immédiates
+    while (attempts < 5) {
+        const structures = [
+            () => {
+                const sujet = theme.mots[Math.floor(Math.random() * theme.mots.length)];
+                const verbe = banques.verbes[Math.floor(Math.random() * banques.verbes.length)];
+                const adj = banques.adjectifs[Math.floor(Math.random() * banques.adjectifs.length)];
+                return `${sujet.charAt(0).toUpperCase() + sujet.slice(1)} ${verbe}, ${adj} et libre,`;
+            },
+            () => {
+                const image = banques.images[Math.floor(Math.random() * banques.images.length)];
+                const motCle = motsCles[Math.floor(Math.random() * motsCles.length)] || 'rêve';
+                return `${image.charAt(0).toUpperCase() + image.slice(1)}, portant le souffle de ${motCle}.`;
+            },
+            () => {
+                const lieu = banques.lieux[Math.floor(Math.random() * banques.lieux.length)];
+                const emotion = banques.emotions[Math.floor(Math.random() * banques.emotions.length)];
+                const motCle = motsCles[Math.floor(Math.random() * motsCles.length)] || 'âme';
+                return `${lieu.charAt(0).toUpperCase() + lieu.slice(1)}, où ${emotion} éveille ${motCle}.`;
+            },
+            () => {
+                const connecteur = banques.connecteurs[Math.floor(Math.random() * banques.connecteurs.length)];
+                const sujet = theme.mots[Math.floor(Math.random() * theme.mots.length)];
+                const verbe = banques.verbes[Math.floor(Math.random() * banques.verbes.length)];
+                const adj = banques.adjectifs[Math.floor(Math.random() * banques.adjectifs.length)];
+                return `${connecteur} ${sujet} ${verbe}, ${adj} comme l'aurore,`;
+            },
+            () => {
+                const motCle = motsCles[Math.floor(Math.random() * motsCles.length)] || 'temps';
+                const verbe = banques.verbes[Math.floor(Math.random() * banques.verbes.length)];
+                const adj = banques.adjectifs[Math.floor(Math.random() * banques.adjectifs.length)];
+                return `Le ${motCle} ${verbe}, ${adj} et souverain,`;
+            },
+            () => {
+                const versTheme = theme.vers[Math.floor(Math.random() * theme.vers.length)];
+                return versTheme;
+            }
+        ];
+        
+        phrase = structures[index % structures.length]();
+        
+        // Vérifier si la phrase n'a pas déjà été utilisée
+        if (!usedPhrases.has(phrase)) {
+            usedPhrases.add(phrase);
+            break;
         }
-    ];
-    return structures[index % structures.length]();
+        attempts++;
+    }
+    
+    return phrase;
 }
 
 function genererPoeme(prompt, nombreVers, themeChoisi) {
     const motsCles = extraireMotsCles(prompt);
     const theme = themes[themeChoisi] || themes.general;
     const vers = [];
-    const versThemeMelanges = melangerTableau(theme.vers);
+    const usedPhrases = new Set();
     
+    const versThemeMelanges = melangerTableau(theme.vers);
+    let themeIndex = 0;
+    
+    // Générer exactement le nombre de vers demandé (1 phrase = 1 ligne)
     for (let i = 0; i < nombreVers; i++) {
-        if (i % 3 === 0 && versThemeMelanges.length > 0) {
-            vers.push(versThemeMelanges[i % versThemeMelanges.length]);
+        // Alterner entre les vers pré-écrits du thème et les vers générés
+        if (i % 3 === 0 && themeIndex < versThemeMelanges.length) {
+            let v = versThemeMelanges[themeIndex];
+            // Éviter les répétitions même pour les vers du thème
+            while (usedPhrases.has(v) && themeIndex < versThemeMelanges.length) {
+                themeIndex++;
+                v = versThemeMelanges[themeIndex];
+            }
+            if (themeIndex < versThemeMelanges.length) {
+                usedPhrases.add(v);
+                vers.push(v);
+                themeIndex++;
+            } else {
+                vers.push(genererVers(motsCles, theme, i, usedPhrases));
+            }
         } else {
-            vers.push(genererVers(motsCles, theme, i));
+            vers.push(genererVers(motsCles, theme, i, usedPhrases));
         }
     }
     
