@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Générateur de Poèmes Libre</title>
+    <title>Plume d'Étoile - Générateur de Poèmes</title>
     <style>
         body {
             font-family: 'Georgia', serif;
@@ -14,6 +14,8 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
         .container {
             background: #1e1e24;
@@ -23,12 +25,15 @@
             max-width: 500px;
             width: 100%;
         }
-        h1 { text-align: center; color: #ff79c6; margin-bottom: 5px; }
-        label { display: block; margin: 15px 0 5px; color: #bd93f9; font-weight: bold; }
+        h1 { text-align: center; color: #ff79c6; margin-bottom: 5px; font-size: 2em;}
+        .subtitle { text-align: center; color: #aaa; margin-top: 0; margin-bottom: 25px; font-size: 0.9em;}
+        
+        label { display: block; margin: 15px 0 5px; color: #bd93f9; font-weight: bold; font-size: 0.95em;}
+        
         textarea, select, button {
             width: 100%;
             padding: 12px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             border-radius: 6px;
             border: 1px solid #44475a;
             background: #282a36;
@@ -41,6 +46,10 @@
             resize: vertical;
             min-height: 100px;
         }
+        textarea:focus, select:focus {
+            outline: none;
+            border-color: #ff79c6;
+        }
         button {
             background: #ff79c6;
             color: #fff;
@@ -48,18 +57,23 @@
             cursor: pointer;
             border: none;
             transition: 0.2s;
-            margin-top: 10px;
+            margin-top: 15px;
+            font-size: 16px;
         }
         button:hover { background: #ff92df; }
+        button:disabled { background: #6272a4; cursor: not-allowed; }
+        
         .output {
-            margin-top: 20px;
-            padding: 15px;
+            margin-top: 25px;
+            padding: 20px;
             background: #282a36;
             border-left: 4px solid #ff79c6;
             border-radius: 4px;
             white-space: pre-wrap;
             font-style: italic;
-            line-height: 1.6;
+            line-height: 1.8;
+            color: #f8f8f2;
+            display: none;
         }
     </style>
 </head>
@@ -67,10 +81,20 @@
 
 <div class="container">
     <h1>Plume d'Étoile</h1>
-    <p style="text-align: center; color: #aaa; margin-top: 0;">Décrivez le poème que vous souhaitez obtenir</p>
+    <p class="subtitle">Décrivez le poème que vous souhaitez obtenir</p>
     
     <label for="prompt">Votre demande :</label>
-    <textarea id="prompt" placeholder="Ex: Un poème romantique sur la beauté des galaxies et le silence de la nuit..."></textarea>
+    <textarea id="prompt" placeholder="Ex: Un amour perdu sous la pluie, la solitude d'un phare..."></textarea>
+
+    <label for="theme">Thème :</label>
+    <select id="theme">
+        <option value="libre">🎨 Libre (Mélange de tous les styles)</option>
+        <option value="amour">💕 Amour</option>
+        <option value="tristesse">😢 Tristesse</option>
+        <option value="nature">🌿 Nature</option>
+        <option value="nuit">🌙 Nuit</option>
+        <option value="espoir">✨ Espoir</option>
+    </select>
 
     <label for="lines">Nombre de vers :</label>
     <select id="lines">
@@ -80,16 +104,18 @@
         <option value="32">32 vers (Très long)</option>
     </select>
 
-    <button id="generateBtn">Composer le poème</button>
+    <button id="generateBtn">✨ Composer le poème</button>
 
-    <div id="result" class="output" style="display: none;"></div>
+    <div id="result" class="output"></div>
 </div>
 
 <script>
     document.getElementById('generateBtn').addEventListener('click', async () => {
         const promptText = document.getElementById('prompt').value;
         const linesCount = document.getElementById('lines').value;
+        const themeSelected = document.getElementById('theme').value;
         const resultDiv = document.getElementById('result');
+        const btn = document.getElementById('generateBtn');
 
         if (!promptText.trim()) {
             alert("Dis-moi quel genre de poème tu veux générer !");
@@ -98,6 +124,8 @@
 
         resultDiv.style.display = 'block';
         resultDiv.innerText = "L'inspiration vient... composition en cours...";
+        btn.disabled = true;
+        btn.innerText = "Composition en cours...";
 
         try {
             const response = await fetch('/generate-poem', {
@@ -105,7 +133,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     prompt: promptText,
-                    lines: linesCount
+                    lines: linesCount,
+                    theme: themeSelected
                 })
             });
 
@@ -117,6 +146,9 @@
             }
         } catch (error) {
             resultDiv.innerText = "Impossible de se connecter au serveur.";
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "✨ Composer le poème";
         }
     });
 </script>
