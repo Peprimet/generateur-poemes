@@ -61,7 +61,11 @@
             font-size: 16px;
         }
         button:hover { background: #ff92df; }
-        button:disabled { background: #6272a4; cursor: not-allowed; }
+        button:disabled { 
+            background: #6272a4; 
+            cursor: not-allowed; 
+            opacity: 0.7;
+        }
         
         .output {
             margin-top: 25px;
@@ -88,11 +92,11 @@
 
     <label for="theme">Thème :</label>
     <select id="theme">
-        <option value="libre">🎨 Libre (Mélange de tous les styles)</option>
+        <option value="libre"> Libre (Mélange de tous les styles)</option>
         <option value="amour">💕 Amour</option>
         <option value="tristesse">😢 Tristesse</option>
         <option value="nature">🌿 Nature</option>
-        <option value="nuit">🌙 Nuit</option>
+        <option value="nuit"> Nuit</option>
         <option value="espoir">✨ Espoir</option>
     </select>
 
@@ -122,10 +126,25 @@
             return;
         }
 
+        // Désactiver le bouton et lancer le compte à rebours de 15 secondes
+        btn.disabled = true;
+        let timeLeft = 15;
+        btn.innerText = `Patientez... ${timeLeft}s`;
+        
+        const countdown = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                btn.innerText = `Patientez... ${timeLeft}s`;
+            } else {
+                clearInterval(countdown);
+                btn.disabled = false;
+                btn.innerText = "✨ Composer le poème";
+            }
+        }, 1000);
+
+        // Afficher le message de chargement
         resultDiv.style.display = 'block';
         resultDiv.innerText = "L'inspiration vient... composition en cours...";
-        btn.disabled = true;
-        btn.innerText = "Composition en cours...";
 
         try {
             const response = await fetch('/generate-poem', {
@@ -146,9 +165,6 @@
             }
         } catch (error) {
             resultDiv.innerText = "Impossible de se connecter au serveur.";
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "✨ Composer le poème";
         }
     });
 </script>
