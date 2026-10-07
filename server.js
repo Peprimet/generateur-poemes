@@ -5,124 +5,167 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ============ GÉNÉRATEUR DE POÈMES PROCÉDURAL ============
+// ============ BASES DE DONNÉES POÉTIQUES ============
 
-// Banques de mots et expressions poétiques
-const banques = {
-    sujets: [
-        'le temps', 'la nuit', 'l\'amour', 'la vie', 'le rêve', 'l\'âme',
-        'le silence', 'la lumière', 'l\'ombre', 'le vent', 'la mer',
-        'le cœur', 'l\'espoir', 'la mémoire', 'le destin', 'l\'univers',
-        'la solitude', 'la passion', 'le mystère', 'l\'infini'
-    ],
-    
-    verbes: [
-        'danse', 'chante', 'murmure', 's\'éveille', 's\'endort', 'brille',
-        'coule', 's\'envole', 'résonne', 'palpite', 's\'efface', 'renaît',
-        's\'illumine', 'tremble', 's\'apaise', 's\'embrase', 'flotte',
-        's\'effiloche', 's\'épanouit', 's\'évanouit'
-    ],
-    
-    adjectifs: [
-        'doux', 'amer', 'lumineux', 'sombre', 'fragile', 'éternel',
-        'silencieux', 'ardent', 'mélancolique', 'serein', 'sauvage',
-        'tendre', 'profond', 'léger', 'intense', 'mystérieux',
-        'brûlant', 'glacé', 'vibrant', 'immobile'
-    ],
-    
-    images: [
-        'comme une étoile filante dans le ciel nocturne',
-        'tel un souffle léger sur l\'eau tranquille',
-        'à l\'image d\'une fleur qui s\'ouvre au printemps',
-        'semblable à un écho perdu dans la vallée',
-        'comme le dernier rayon du soleil couchant',
-        'tel un secret murmuré à l\'oreille du vent',
-        'à la manière d\'une larme qui roule sur la joue',
-        'comme un papillon prisonnier de l\'ambre',
-        'tel un mot oublié sur les lèvres du temps',
-        'à l\'instar d\'une ombre qui s\'allonge au crépuscule',
-        'comme une mélodie suspendue entre deux silences',
-        'tel un rêve qui s\'effiloche à l\'aube',
-        'comme une flamme qui danse dans la nuit',
-        'tel un souvenir qui s\'estompe dans la brume',
-        'à l\'image d\'un oiseau libre dans l\'immensité'
-    ],
-    
-    rimes_a: [
-        ['nuit', 'luit', 'bruit', 's\'enfuit', 'luit', 'conduit'],
-        ['amour', 'toujours', 'velours', 'alentour', 'séjour', 'retour'],
-        ['ciel', 'éternel', 'essentiel', 'miel', 'arc-en-ciel', 'solennel'],
-        ['cœur', 'bonheur', 'douleur', 'chaleur', 'pâleur', 'lueur'],
-        ['vent', 'mouvement', 'firmament', 'serpent', 'moment', 'tourment'],
-        ['âme', 'flamme', 'femme', 'drame', 'gamme', 'proclame'],
-        ['temps', 'printemps', 'instant', 'néant', 'océan', 'diamant'],
-        ['rêve', 'grève', 'trêve', 's\'achève', 'se lève', 'brève']
-    ],
-    
-    rimes_b: [
-        ['étoile', 'voile', 'toile', 'frêle', 'aile', 'fidèle'],
-        ['ombre', 'sombre', 'nombre', 'pénombre', 'décombre', 'monde'],
-        ['silence', 'absence', 'enfance', 'défense', 'immense', 'balance'],
-        ['lumière', 'prière', 'entière', 'arrière', 'mystère', 'frontière'],
-        ['murmure', 'nature', 'parure', 'blessure', 'aventure', 'mesure'],
-        ['destin', 'matin', 'chemin', 'lointain', 'soudain', 'demain'],
-        ['espoir', 'miroir', 'noir', 'devoir', 'pouvoir', 'savoir'],
-        ['univers', 'hiver', 'amer', 'enfer', 'éclair', 'chair']
-    ],
-    
-    connecteurs: [
-        'Et', 'Mais', 'Pourtant', 'Alors', 'Car', 'Puis',
-        'Tandis que', 'Lorsque', 'Si bien que', 'Ainsi',
-        'Cependant', 'Néanmoins', 'Or', 'Donc', 'Enfin'
-    ],
-    
-    lieux: [
-        'dans l\'ombre des forêts anciennes',
-        'au bord de l\'océan infini',
-        'sous le ciel étoilé',
-        'au cœur de la nuit silencieuse',
-        'dans les méandres du temps',
-        'au creux de l\'aube naissante',
-        'sur les rivages de l\'oubli',
-        'dans les jardins secrets de l\'âme',
-        'au sommet des montagnes brumeuses',
-        'dans les rues pavées de souvenirs',
-        'au fond des abysses du cœur',
-        'dans les champs dorés de l\'espoir'
-    ],
-    
-    emotions: [
-        'une joie pure et sauvage',
-        'une mélancolie douce et profonde',
-        'une passion ardente et dévorante',
-        'une sérénité absolue',
-        'une nostalgie tendre et amère',
-        'un émerveillement enfantin',
-        'une douleur qui transfigure',
-        'un espoir qui résiste à tout',
-        'une liberté enivrante',
-        'une paix qui apaise les tempêtes'
-    ]
+const themes = {
+    amour: {
+        mots: ['cœur', 'âme', 'amour', 'désir', 'passion', 'tendresse', 'étreinte', 'baiser', 'regard', 'soupir'],
+        vers: [
+            "Mon cœur s'emballe au rythme de tes pas,",
+            "Dans tes yeux, je me perds et me retrouve,",
+            "L'amour est un feu qui ne s'éteint pas,",
+            "Ton souffle sur ma peau, une douce épreuve.",
+            "Je t'aime comme la nuit aime la lune,",
+            "Silencieusement, profondément, sans fin.",
+            "Chaque battement de mon cœur t'importune,",
+            "Car il ne vit que pour toi, mon destin.",
+            "Tes mains sur mon visage, une caresse infinie,",
+            "Ton rire résonne comme un chant de vie.",
+            "Dans l'ombre de tes bras, je trouve mon abri,",
+            "Loin du monde, loin du bruit, loin de l'oubli.",
+            "Ton nom gravé dans l'or de ma mémoire,",
+            "Chaque instant avec toi est une victoire.",
+            "L'amour n'est pas un mot, c'est un univers,",
+            "Où deux âmes dansent au bord de la mer."
+        ]
+    },
+    tristesse: {
+        mots: ['larmes', 'douleur', 'vide', 'absence', 'mélancolie', 'chagrin', 'silence', 'ombre', 'regret', 'solitude'],
+        vers: [
+            "Les larmes coulent comme une pluie d'automne,",
+            "Le silence pèse sur mon cœur brisé.",
+            "Dans l'ombre, je cherche ce qui me pardonne,",
+            "Mais le chagrin refuse de s'apaiser.",
+            "Ton absence creuse un vide en moi,",
+            "Un écho lointain qui ne répond plus.",
+            "Je marche seul, perdu, sans loi,",
+            "Dans les rues grises de mes souvenirs vaincus.",
+            "La mélancolie s'installe dans mes veines,",
+            "Comme un poison doux qui m'empoisonne lentement.",
+            "Chaque nuit, je compte mes peines,",
+            "Et le matin me trouve encore gémissant.",
+            "Le temps ne guérit rien, il ensevelit,",
+            "Sous la poussière des jours, nos regrets enfouis.",
+            "Je souris encore, mais c'est un masque fragile,",
+            "Derrière, il n'y a qu'un océan tranquille."
+        ]
+    },
+    nature: {
+        mots: ['forêt', 'océan', 'montagne', 'fleur', 'arbre', 'rivière', 'ciel', 'soleil', 'lune', 'étoile'],
+        vers: [
+            "La forêt chante sous le vent du matin,",
+            "Les feuilles dansent comme des papillons d'or.",
+            "La rivière serpente, un ruban argenté, serein,",
+            "Portant les rêves vers des rivages encore.",
+            "L'océan rugit, immense et éternel,",
+            "Ses vagues écrasent les rochers avec fureur.",
+            "Le soleil se couche, peignant le ciel,",
+            "De rouge, de pourpre, de mille couleurs.",
+            "La montagne se dresse, fière et immuable,",
+            "Témoin silencieux des siècles écoulés.",
+            "Une fleur éclot, fragile et adorable,",
+            "Dans l'herbe haute, humblement révélée.",
+            "La lune veille sur le monde endormi,",
+            "Sa lumière douce berce les insomnies.",
+            "Les étoiles scintillent, phares de l'infini,",
+            "Guidant les âmes perdues dans la nuit."
+        ]
+    },
+    nuit: {
+        mots: ['nuit', 'étoiles', 'lune', 'ombre', 'silence', 'rêve', 'insomnie', 'ténèbres', 'clair de lune', 'minuit'],
+        vers: [
+            "La nuit déploie son manteau d'étoiles,",
+            "Le vent murmure à travers les voiles.",
+            "Chaque mot est une étincelle,",
+            "Dans l'ombre douce, une flamme fidèle.",
+            "Le temps s'arrête, suspendu,",
+            "Entre le rêve et l'inconnu.",
+            "La plume danse, légère et libre,",
+            "Écrivant l'âme, vers par vers, en équilibre.",
+            "Minuit sonne, le monde se tait,",
+            "Seule la lune éclaire mes secrets.",
+            "Les ténèbres ne sont pas un ennemi,",
+            "Mais un refuge pour les cœurs meurtris.",
+            "Dans le silence, j'entends l'univers,",
+            "Il me parle de mystères et d'hivers.",
+            "L'insomnie est une compagne fidèle,",
+            "Elle m'accompagne jusqu'à l'aube nouvelle."
+        ]
+    },
+    espoir: {
+        mots: ['lumière', 'espoir', 'demain', 'renaissance', 'aube', 'courage', 'force', 'avenir', 'renaître', 'flamme'],
+        vers: [
+            "Après la nuit la plus noire, l'aube renaît,",
+            "Le soleil perce les nuages gris.",
+            "L'espoir est une flamme qui ne s'éteint jamais,",
+            "Même quand le vent souffle sur nos esprits.",
+            "Demain est une page blanche à écrire,",
+            "Un chemin nouveau qui s'ouvre devant moi.",
+            "Le courage n'est pas l'absence de délire,",
+            "Mais la force de se lever, encore, malgré tout, malgré soi.",
+            "Chaque cicatrice est une leçon apprise,",
+            "Chaque larme versée nourrit la terre.",
+            "La renaissance commence dans la brise,",
+            "Quand on accepte enfin de se libérer de ses chaînes.",
+            "L'avenir n'est pas écrit, il est à inventer,",
+            "Pas à pas, mot à mot, jour après jour.",
+            "La lumière revient toujours, il faut y croire,",
+            "Car même l'hiver le plus long cède au printemps un jour."
+        ]
+    },
+    general: {
+        mots: ['vie', 'temps', 'âme', 'cœur', 'rêve', 'monde', 'instant', 'mémoire', 'destin', 'vérité'],
+        vers: [
+            "Le temps passe, indifférent et souverain,",
+            "Emportant nos jours comme des feuilles au vent.",
+            "L'âme cherche sa route, un chemin incertain,",
+            "Entre les ombres d'hier et les lueurs de demain.",
+            "Chaque instant est un monde en soi,",
+            "Un univers complet qui naît et qui meurt.",
+            "La mémoire tisse ce que nous croyons être,",
+            "Un fil fragile qui relie nos peurs.",
+            "Le destin n'est pas une route tracée,",
+            "Mais un jardin sauvage qu'on cultive en silence.",
+            "La vérité se cache, souvent déguisée,",
+            "Derrière les masques de notre existence.",
+            "Nous sommes des voyageurs sans bagage,",
+            "Portant seulement nos rêves et nos images.",
+            "La vie est un poème qu'on écrit sans rature,",
+            "Avec l'encre de nos joies et de nos blessures."
+        ]
+    }
 };
 
-// Fonction pour extraire les mots importants du prompt
+const banques = {
+    verbes: ['danse', 'chante', 'murmure', 's\'éveille', 's\'endort', 'brille', 'coule', 's\'envole', 'résonne', 'palpite', 's\'efface', 'renaît', 's\'illumine', 'tremble', 's\'apaise', 's\'embrase', 'flotte', 's\'effiloche', 's\'épanouit', 's\'évanouit'],
+    adjectifs: ['doux', 'amer', 'lumineux', 'sombre', 'fragile', 'éternel', 'silencieux', 'ardent', 'mélancolique', 'serein', 'sauvage', 'tendre', 'profond', 'léger', 'intense', 'mystérieux', 'brûlant', 'glacé', 'vibrant', 'immobile'],
+    images: ['comme une étoile filante dans le ciel nocturne', 'tel un souffle léger sur l\'eau tranquille', 'à l\'image d\'une fleur qui s\'ouvre au printemps', 'semblable à un écho perdu dans la vallée', 'comme le dernier rayon du soleil couchant', 'tel un secret murmuré à l\'oreille du vent', 'à la manière d\'une larme qui roule sur la joue', 'comme un papillon prisonnier de l\'ambre', 'tel un mot oublié sur les lèvres du temps', 'à l\'instar d\'une ombre qui s\'allonge au crépuscule', 'comme une mélodie suspendue entre deux silences', 'tel un rêve qui s\'effiloche à l\'aube', 'comme une flamme qui danse dans la nuit', 'tel un souvenir qui s\'estompe dans la brume', 'à l\'image d\'un oiseau libre dans l\'immensité'],
+    connecteurs: ['Et', 'Mais', 'Pourtant', 'Alors', 'Car', 'Puis', 'Tandis que', 'Lorsque', 'Si bien que', 'Ainsi', 'Cependant', 'Néanmoins', 'Or', 'Donc', 'Enfin'],
+    lieux: ['dans l\'ombre des forêts anciennes', 'au bord de l\'océan infini', 'sous le ciel étoilé', 'au cœur de la nuit silencieuse', 'dans les méandres du temps', 'au creux de l\'aube naissante', 'sur les rivages de l\'oubli', 'dans les jardins secrets de l\'âme', 'au sommet des montagnes brumeuses', 'dans les rues pavées de souvenirs', 'au fond des abysses du cœur', 'dans les champs dorés de l\'espoir'],
+    emotions: ['une joie pure et sauvage', 'une mélancolie douce et profonde', 'une passion ardente et dévorante', 'une sérénité absolue', 'une nostalgie tendre et amère', 'un émerveillement enfantin', 'une douleur qui transfigure', 'un espoir qui résiste à tout', 'une liberté enivrante', 'une paix qui apaise les tempêtes']
+};
+
+// ============ FONCTIONS DE GÉNÉRATION ============
+
 function extraireMotsCles(prompt) {
-    const mots = prompt.toLowerCase()
-        .replace(/[.,!?;:'"()]/g, '')
-        .split(/\s+/)
-        .filter(mot => mot.length > 3);
-    
-    // Enlever les mots trop communs
+    const mots = prompt.toLowerCase().replace(/[.,!?;:'"()]/g, '').split(/\s+/).filter(mot => mot.length > 3);
     const stopWords = ['pour', 'avec', 'dans', 'sur', 'sous', 'entre', 'vers', 'chez', 'par', 'de', 'du', 'des', 'le', 'la', 'les', 'un', 'une', 'ce', 'cette', 'ces', 'mon', 'ma', 'mes', 'ton', 'ta', 'tes', 'son', 'sa', 'ses', 'notre', 'votre', 'leur', 'qui', 'que', 'quoi', 'dont', 'où', 'quand', 'comment', 'pourquoi', 'si', 'mais', 'ou', 'et', 'donc', 'or', 'ni', 'car', 'je', 'tu', 'il', 'elle', 'nous', 'vous', 'ils', 'elles', 'suis', 'es', 'est', 'sommes', 'êtes', 'sont', 'ai', 'as', 'a', 'avons', 'avez', 'ont', 'fait', 'faire', 'dit', 'dire', 'veux', 'vouloir', 'peux', 'pouvoir', 'dois', 'devoir', 'vais', 'aller'];
-    
     return mots.filter(mot => !stopWords.includes(mot)).slice(0, 5);
 }
 
-// Fonction pour générer un vers aléatoire
-function genererVers(motsCles, index) {
+function melangerTableau(arr) {
+    const copie = [...arr];
+    for (let i = copie.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copie[i], copie[j]] = [copie[j], copie[i]];
+    }
+    return copie;
+}
+
+function genererVers(motsCles, theme, index) {
     const structures = [
         () => {
-            const sujet = banques.sujets[Math.floor(Math.random() * banques.sujets.length)];
+            const sujet = theme.mots[Math.floor(Math.random() * theme.mots.length)];
             const verbe = banques.verbes[Math.floor(Math.random() * banques.verbes.length)];
             const adj = banques.adjectifs[Math.floor(Math.random() * banques.adjectifs.length)];
             return `${sujet.charAt(0).toUpperCase() + sujet.slice(1)} ${verbe}, ${adj} et libre,`;
@@ -140,7 +183,7 @@ function genererVers(motsCles, index) {
         },
         () => {
             const connecteur = banques.connecteurs[Math.floor(Math.random() * banques.connecteurs.length)];
-            const sujet = banques.sujets[Math.floor(Math.random() * banques.sujets.length)];
+            const sujet = theme.mots[Math.floor(Math.random() * theme.mots.length)];
             const verbe = banques.verbes[Math.floor(Math.random() * banques.verbes.length)];
             const adj = banques.adjectifs[Math.floor(Math.random() * banques.adjectifs.length)];
             return `${connecteur} ${sujet} ${verbe}, ${adj} comme l'aurore,`;
@@ -152,67 +195,50 @@ function genererVers(motsCles, index) {
             return `Le ${motCle} ${verbe}, ${adj} et souverain,`;
         },
         () => {
-            const rimeA = banques.rimes_a[Math.floor(Math.random() * banques.rimes_a.length)];
-            const mot1 = rimeA[Math.floor(Math.random() * rimeA.length)];
-            const mot2 = rimeA[Math.floor(Math.random() * rimeA.length)];
-            const verbe = banques.verbes[Math.floor(Math.random() * banques.verbes.length)];
-            return `Quand le ${mot1} ${verbe} dans la ${mot2},`;
+            const versTheme = theme.vers[Math.floor(Math.random() * theme.vers.length)];
+            return versTheme;
         }
     ];
-    
     return structures[index % structures.length]();
 }
 
-// Fonction pour créer une rime
-function trouverRime(mot) {
-    for (const groupe of [...banques.rimes_a, ...banques.rimes_b]) {
-        if (groupe.some(rime => mot.endsWith(rime.slice(-3)))) {
-            return groupe[Math.floor(Math.random() * groupe.length)];
+function genererPoeme(prompt, nombreVers, themeChoisi) {
+    const motsCles = extraireMotsCles(prompt);
+    const theme = themes[themeChoisi] || themes.general;
+    const vers = [];
+    const versThemeMelanges = melangerTableau(theme.vers);
+    
+    for (let i = 0; i < nombreVers; i++) {
+        if (i % 3 === 0 && versThemeMelanges.length > 0) {
+            vers.push(versThemeMelanges[i % versThemeMelanges.length]);
+        } else {
+            vers.push(genererVers(motsCles, theme, i));
         }
     }
-    const rimesGeneriques = ['étoile', 'voile', 'toile', 'aile', 'fidèle', 'ombre', 'sombre', 'nombre', 'lumière', 'prière', 'entière'];
-    return rimesGeneriques[Math.floor(Math.random() * rimesGeneriques.length)];
-}
-
-// Fonction principale de génération
-function genererPoeme(prompt, nombreVers) {
-    const motsCles = extraireMotsCles(prompt);
-    const vers = [];
     
-    // Générer des vers uniques
-    for (let i = 0; i < nombreVers; i++) {
-        const versGenere = genererVers(motsCles, i);
-        vers.push(versGenere);
-    }
-    
-    // Organiser en strophes de 4 vers
     const strophes = [];
     for (let i = 0; i < vers.length; i += 4) {
         strophes.push(vers.slice(i, i + 4).join('\n'));
     }
-    
-    // Créer un titre basé sur le prompt
-    const titre = `✨ ${prompt} ✨`;
-    
-    return `${titre}\n\n${strophes.join('\n\n')}`;
+    return `${prompt}\n\n${strophes.join('\n\n')}`;
 }
 
 // ============ ROUTE API ============
 
 app.post('/generate-poem', async (req, res) => {
-    const { prompt, lines } = req.body;
+    const { prompt, lines, theme } = req.body;
 
     if (!prompt || !prompt.trim()) {
         return res.status(400).json({ error: "Le prompt est vide." });
     }
 
     const nombreVers = parseInt(lines) || 16;
-    const poeme = genererPoeme(prompt, nombreVers);
+    const themeChoisi = theme === 'libre' ? 'general' : theme;
+    const poeme = genererPoeme(prompt, nombreVers, themeChoisi);
 
-    // Petite pause pour simuler la "réflexion" poétique
     setTimeout(() => {
         res.json({ poem: poeme });
-    }, 1000 + Math.random() * 1000); // Délai aléatoire entre 1 et 2 secondes
+    }, 800 + Math.random() * 800);
 });
 
 const PORT = process.env.PORT || 10000;
