@@ -9,7 +9,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ============ CONFIGURATION ============
 const GEMINI_KEY = process.env.GEMINI_API_KEY || null;
 const liste = (valeur) => valeur.split(',').map(s => s.trim()).filter(Boolean);
-// Modèles essayés dans l'ordre : le premier qui répond gagne.
 // ⚠️ Si la variable GEMINI_MODEL existe sur Render, ELLE ÉCRASE cette liste !
 const GEMINI_MODELS = liste(process.env.GEMINI_MODEL || 'gemini-3.8-flash,gemini-3.5-flash-lite,gemini-2.5-flash,gemini-2.5-flash-lite');
 
@@ -39,55 +38,53 @@ setInterval(() => {
 }, 5 * 60 * 1000).unref();
 
 // ============================================================
-//  CONSIGNES — le poème est centré sur la DEMANDE
+//  CONSIGNES — POÈMES SIMPLES ET DIRECTS
 // ============================================================
 const TONS = {
     amour: 'tendre, sincère, chaleureux',
-    tristesse: 'déchirant, pudique, à voix basse',
-    nature: 'émerveillé, sensuel, vivant',
-    nuit: 'mystérieux, intime, velouté',
-    espoir: 'fervent, défiant, lumineux',
-    general: 'profond, méditatif, intensément humain'
+    tristesse: 'doux et triste, à voix basse',
+    nature: 'émerveillé, simple, vivant',
+    nuit: 'calme, doux, apaisé',
+    espoir: 'sincère, lumineux, encourageant',
+    general: 'sincère, simple, humain'
 };
 
-const SYSTEME = `Tu es un poète français contemporain. Tu écris des poèmes qui touchent, qui font mal et du bien à la fois.
+const SYSTEME = `Tu écris des poèmes SIMPLES et sincères, en français, à la manière d'une chanson ou d'une lettre qu'on garde précieusement.
 
-RÈGLE ABSOLUE : le poème est SUR le sujet demandé. Si la demande est « un poème d'amour pour Juliette », tout le poème parle de Juliette et de l'amour pour elle — rien d'autre. Pas d'images hors sujet, pas de digression.
+RÈGLE 1 — LE SUJET AVANT TOUT : le poème parle uniquement du sujet demandé. Si la demande est « un poème d'amour pour Juliette », chaque vers parle de Juliette et de l'amour pour elle. Rien d'autre.
 
-Tes principes :
-1. MONTRER, NE PAS DIRE. L'émotion naît d'images concrètes et sensorielles (un geste, une lumière, une voix), pas de mots abstraits alignés.
-2. LE SUJET DOMINE. Chaque vers parle du sujet demandé.
-3. RIMES SIMPLES ET JUSTES. Schéma régulier (ABAB ou AABB, le même partout), pas d'inversion forcée, pas de mot-cheville.
-4. RYTHME QUI RESPIRE. Vers de 10 à 12 syllabes environ, syntaxe naturelle, comme parlée.
-5. UNE VOIX INTIME. Première personne, « tu » si le poème s'adresse à quelqu'un.
-6. ZÉRO CLICHÉ. Bannis : cœur qui bat, océan de larmes, feu de l'amour, lumière au bout du tunnel, mon âme sœur, papillons dans le ventre, tu es mon soleil, pour l'éternité.
-7. FRANÇAIS IMPECCABLE. Accords corrects, aucun mot inventé.
+RÈGLE 2 — SIMPLICITÉ ABSOLUE : des mots de tous les jours, des phrases courtes et claires. Chaque vers doit être compris immédiatement, du premier coup. Écris comme on parle quand on est sincère.
 
-FORMAT DE SORTIE : ligne 1 = un titre court (2 à 5 mots) lié au sujet, grammaticalement correct (si prénom : « Pour Juliette », « Le sourire de Juliette » — jamais deux noms juxtaposés). Ligne vide. Puis les vers, en strophes de 4 vers séparées par une ligne vide. Rien d'autre : pas d'introduction, pas de commentaire, pas de markdown.`;
+RÈGLE 3 — DIS LES CHOSES : chaque vers dit clairement quelque chose sur le sujet — un sentiment (« ton rire me manque »), une qualité (« tu rends mes journées plus belles »), un souhait (« je voudrais te garder près de moi »). N'invente PAS de scènes sans rapport avec le sujet (une table, un train, du thé froid, un atelier…). Une ou deux images simples suffisent, et elles doivent servir le sujet.
+
+RÈGLE 4 — RIMES SIMPLES : rimes naturelles en ABAB ou AABB (le même schéma partout). Si une rime oblige à écrire quelque chose de bizarre, change la phrase, pas le sens.
+
+RÈGLE 5 — INTERDITS : vocabulaire compliqué ou rare, métaphores obscures, clichés (tu es mon soleil, mon amour éternel, mon âme sœur), mots anglais.
+
+FORMAT DE SORTIE : ligne 1 = un titre court, simple et correct, lié au sujet (exemples : « Pour Juliette », « Ton sourire », « Juliette »). Ligne vide. Puis les vers, en strophes de 4 vers séparées par une ligne vide. Rien d'autre : pas d'introduction, pas de commentaire, pas de markdown.`;
 
 function construireConsigne(prompt, nombreVers, themeChoisi) {
     const ton = TONS[themeChoisi] || TONS.general;
     const nbStrophes = Math.ceil(nombreVers / 4);
-    const particularite = themeChoisi === 'amour'
-        ? `\n- Écris avec tendresse et pudeur : comme une lettre d'amour douce et vraie. De l'émotion sincère, sans exaltation ni fièvre — la douceur d'un amour profond et apaisé.`
-        : '';
 
-    const user = `Écris un poème en français.
+    const user = `Écris un poème simple en français.
 
-SUJET — c'est LA demande, tout le poème doit en parler, chaque vers :
+SUJET — tout le poème doit parler de ça, chaque vers :
 « ${prompt} »
 
 TON : ${ton}
-LONGUEUR : exactement ${nombreVers} vers, en ${nbStrophes} strophe${nbStrophes > 1 ? 's' : ''} de 4 vers.
 
-- Si le sujet est une personne (un prénom, « ma mère »…), adresse-toi à elle avec « tu », invente des détails crédibles et touchants sur votre relation. Le titre aussi doit parler du sujet.${particularite}`;
+- Chaque vers dit clairement quelque chose sur le sujet : un sentiment, une qualité, un souvenir, un souhait.
+- Si le sujet est une personne, dis simplement ce qu'elle représente pour toi : sa présence, son rire, ce qu'elle change dans tes journées, ce que tu lui souhaites.
+- Mots simples du quotidien, phrases courtes, vers de 8 à 12 syllabes.
+- Exactement ${nombreVers} vers, en ${nbStrophes} strophe${nbStrophes > 1 ? 's' : ''} de 4 vers séparées par une ligne vide.
+- Le titre aussi doit être simple et parler du sujet.`;
 
     return { system: SYSTEME, user };
 }
 
 // ============================================================
-//  APPEL GEMINI — défensif : si un paramètre est refusé (HTTP 400),
-//  on retente automatiquement en configuration minimale
+//  APPEL GEMINI — défensif (retry en config minimale si HTTP 400)
 // ============================================================
 async function appelerGemini(modele, system, user) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modele)}:generateContent`;
@@ -97,12 +94,9 @@ async function appelerGemini(modele, system, user) {
         contents: [{ role: 'user', parts: [{ text: user }] }]
     };
 
-    // Config selon la génération du modèle :
-    // - 2.5 : on coupe la « réflexion » (10-20 s de gagnées) + température haute
-    // - 3.x : config minimale (température par défaut recommandée par Google)
     let generationConfig = { maxOutputTokens: 4096 };
     if (/2\.5/.test(modele)) {
-        generationConfig.temperature = 1.0;
+        generationConfig.temperature = 0.85;   // moins d'hallucinations, toujours varié
         generationConfig.topP = 0.95;
         generationConfig.thinkingConfig = { thinkingBudget: 0 };
     }
@@ -113,7 +107,6 @@ async function appelerGemini(modele, system, user) {
         signal: AbortSignal.timeout(30000)
     });
 
-    // Paramètre refusé ? Nouvel essai en config minimale
     if (r.status === 400) {
         const jErr = await r.json().catch(() => ({}));
         console.warn(`[IA] ${modele} : HTTP 400 (${jErr?.error?.message || '?'}) → essai en config minimale`);
@@ -137,26 +130,57 @@ async function appelerGemini(modele, system, user) {
 }
 
 // ============================================================
-//  MISE EN FORME : titre + strophes de 4 vers
+//  TITRES : correction + filets de sécurité
 // ============================================================
-const PETITS_MOTS = new Set(['de', 'du', 'des', 'à', 'au', 'aux', 'en', 'et', 'ni', 'ou', 'pour', 'par', 'sous', 'sur', 'dans', 'chez', 'avec', 'sans', 'contre', 'vers', 'le', 'la', 'les', 'un', 'une']);
+const PETITS_MOTS = new Set(['de', 'du', 'des', 'à', 'au', 'aux', 'en', 'et', 'ni', 'ou', 'pour', 'par', 'sous', 'sur', 'dans', 'chez', 'avec', 'sans', 'contre', 'vers', 'le', 'la', 'les', 'un', 'une', 'mon', 'ma', 'ton', 'ta', 'son', 'sa']);
 
+// Mots anglais qui apparaissent parfois par erreur → on jette le titre
+const MOTS_ANGLAIS = /\b(the|and|of|for|with|from|four|love|night|moon|star|my|your|you|is|are|our|her|his)\b/i;
+
+// Retourne un titre corrigé, ou null si le titre est douteux (→ repli)
 function corrigerTitre(titre) {
+    if (MOTS_ANGLAIS.test(titre)) return null;
+
     const mots = titre.split(/\s+/);
     if (mots.length < 2) return titre;
-    const article = /^(l'|le|la|les|un|une|des|d')/i.test(mots[0]);
+
     const dernier = mots[mots.length - 1];
     const avantDernier = mots[mots.length - 2];
     if (!avantDernier) return titre;
-    const apresClitique = avantDernier.replace(/^(l'|d')/i, '');
-    const dernierEstNom = /^[A-ZÀ-ÖØ-ÞŒÆ][a-zà-ÿ]/.test(dernier);
-    const avantMinuscule = /^[a-zà-ÿ]/.test(apresClitique);
-    if (article && dernierEstNom && avantMinuscule && !PETITS_MOTS.has(apresClitique.toLowerCase())) {
-        mots.splice(-1, 0, /^[aeiouyéèêàâîôûh]/i.test(dernier) ? "d'" : 'de');
+
+    const dernierEstNomPropre = /^[A-ZÀ-ÖØ-ÞŒÆ][a-zà-ÿ]+$/.test(dernier);
+
+    if (dernierEstNomPropre) {
+        const apresClitique = avantDernier.replace(/^(l'|d')/i, '');
+        if (PETITS_MOTS.has(avantDernier.toLowerCase())) return titre; // déjà correct (« Pour Juliette »)
+
+        if (/^[a-zà-ÿ]/.test(apresClitique)) {
+            // « L'escalier Juliette » → « L'escalier de Juliette »
+            mots.splice(-1, 0, /^[aeiouyéèêàâîôûh]/i.test(dernier) ? "d'" : 'de');
+            return mots.join(' ');
+        }
+        // « Four Juliette » : deux mots douteux juxtaposés → titre invalide
+        return null;
     }
-    return mots.join(' ');
+    return titre;
 }
 
+// Titre de repli intelligent : détecte un prénom dans la demande
+function titreDeRepli(prompt) {
+    const exclus = new Set(['Un', 'Une', 'Le', 'La', 'Les', 'Mon', 'Ma', 'Mes', 'Ton', 'Ta', 'Tes', 'Son', 'Sa', 'Ses', 'Pour', 'Avec', 'Dans', 'Sur', 'Sous', 'Nous', 'Vous', 'Elle', 'Il', 'Ils', 'Elles', 'Dieu', 'Paris']);
+    const prénom = prompt
+        .split(/\s+/)
+        .find((m, i) => i > 0 && /^[A-ZÀ-ÖØ-ÞŒÆ][a-zà-ÿ]+$/.test(m) && m.length >= 3 && !exclus.has(m));
+    if (prénom) return `Pour ${prénom}`;
+
+    const p = prompt.replace(/[.!?…]+$/, '').trim();
+    if (p.length <= 40) return cap(p);
+    return 'Sans titre';
+}
+
+// ============================================================
+//  MISE EN FORME : titre + strophes de 4 vers
+// ============================================================
 function mettreEnForme(brut, nombreVers, prompt) {
     if (!brut) return null;
 
@@ -176,10 +200,14 @@ function mettreEnForme(brut, nombreVers, prompt) {
         .replace(/[.:;,!?]+$/, '')
         .trim();
 
-    // La 1re ligne ressemble à un vers plutôt qu'à un titre ?
-    if (!titre || titre.split(' ').length > 7) {
+    const titreCorrige = corrigerTitre(titre);
+
+    // Pas de titre, titre trop long, ou titre douteux → repli
+    if (!titre || titre.split(' ').length > 7 || !titreCorrige) {
         lignes.unshift(premiere);
-        titre = prompt.length <= 40 ? cap(prompt.replace(/[.!?…]+$/, '')) : 'Sans titre';
+        titre = titreDeRepli(prompt);
+    } else {
+        titre = titreCorrige;
     }
 
     const vers = lignes.slice(0, nombreVers);
@@ -187,11 +215,11 @@ function mettreEnForme(brut, nombreVers, prompt) {
 
     const strophes = [];
     for (let i = 0; i < vers.length; i += 4) strophes.push(vers.slice(i, i + 4).join('\n'));
-    return `${cap(corrigerTitre(titre))}\n\n${strophes.join('\n\n')}`;
+    return `${cap(titre)}\n\n${strophes.join('\n\n')}`;
 }
 
 // ============================================================
-//  GÉNÉRATION : essaie chaque modèle, mémorise le problème exact
+//  GÉNÉRATION
 // ============================================================
 async function poemeParIA(prompt, nombreVers, themeChoisi) {
     const { system, user } = construireConsigne(prompt, nombreVers, themeChoisi);
@@ -253,7 +281,7 @@ app.post('/generate-poem', async (req, res) => {
     });
 });
 
-// ============ DIAGNOSTIC : visite /test-ia dans ton navigateur ============
+// ============ DIAGNOSTIC : /test-ia ============
 app.get('/test-ia', async (req, res) => {
     if (!GEMINI_KEY) {
         return res.send(`<h2>🔍 Diagnostic IA</h2>
