@@ -5,7 +5,7 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ============ BANQUES THÉMATIQUES (mots insérés au cœur des vers) ============
+// ============ BANQUES THÉMATIQUES ============
 
 const themes = {
     amour: {
@@ -52,13 +52,9 @@ const themes = {
     }
 };
 
-// ============ COUPLETS PROFONDS (rimes AA), classés par mouvement ============
-// {N}=nom du thème, {V}=verbe, {A}=adjectif, {I}=image, {B}=ambiance, {KC}=prénom/sujet
-// Aucun placeholder en fin de vers : les rimes sont toujours garanties.
+// ============ COUPLETS PROFONDS (rimes AA garanties) ============
 
 const mouvements = {
-
-    // 1. OUVERTURE : le monde, les sens, une scène
     ouverture: [
         ["Une lumière {A} traverse le matin,", "Et réveille en secret ce qui dormait en vain."],
         ["Le vent se lève {A} au bord du premier toit,", "Et le monde, doucement, se souvient de moi."],
@@ -67,8 +63,6 @@ const mouvements = {
         ["Le jour décline {A}, l'ombre s'agrandit,", "Et le cœur entend mieux ce que l'ombre lui dit."],
         ["Une fenêtre {A} s'allume au loin dans la ville,", "Comme une âme qui veille, obstinée et tranquille."]
     ],
-
-    // 2. INTÉRIORITÉ : mémoire, intime, ce qu'on porte
     interieur: [
         ["Je porte en moi des pays que nul n'a traversés,", "Des villes de silence aux portes condamnées."],
         ["Ma mémoire est une maison sans portes ni repos,", "Où dorment des visages que le temps n'efface pas."],
@@ -78,8 +72,6 @@ const mouvements = {
         ["En moi, quelque chose de {A} refuse de mourir,", "Une braise, un souffle, un presque-souvenir."],
         ["En moi, {B} est entrée sans frapper,", "Et elle a fait de mon silence sa maison, son été."]
     ],
-
-    // 3. QUESTIONNEMENT : paradoxes, vertige, philosophie
     question: [
         ["Qu'est-ce que vivre, sinon attendre sans comprendre,", "Et tendre vers demain des mains qui savent attendre ?"],
         ["Pourquoi faut-il que toute lumière ait son ombre,", "Et que le cœur le plus {A} tienne dans un lieu si sombre ?"],
@@ -88,8 +80,6 @@ const mouvements = {
         ["Le temps ne prend rien : il nous rend à nous-mêmes,", "Délestés du superflu, nus comme des poèmes."],
         ["Et si c'était dans le vide que tout se remplit,", "Dans l'absence que l'amour trouve son vrai pays ?"]
     ],
-
-    // 4. CHUTE : vérité finale, ouverture, dépassement
     chute: [
         ["Alors je cesse de craindre : rien de ce qui fut ne meurt,", "Ce qui est aimé demeure, plus fort que l'heure."],
         ["Et s'il ne reste qu'une chose à emporter au bout du chemin,", "Ce sera cette lumière {A} qu'on a offerte un matin."],
@@ -97,16 +87,36 @@ const mouvements = {
         ["Ce qui profondément se creuse devient passage,", "Et l'âme la plus {A} est la plus belle des pages."],
         ["Ainsi, même au creux de la nuit, une clarté demeure :", "L'amour donné, l'amour reçu — la seule chose qui ne meurt."],
         ["Et quand viendra le soir, je n'aurai qu'un vœu, qu'une envie :", "Avoir aimé assez pour que ça dure toute une vie."]
-    ],
+    ]
+};
 
-    // Couplets avec le prénom / sujet du poème
-    prenom: [
+// ============ COUPLETS AVEC LE SUJET, CLASSÉS PAR TON ============
+
+const prenom = {
+    amour: [
+        ["{KC}, tu es la lumière qui ne demande rien,", "Et qui pourtant éclaire tout ce que je deviens."],
+        ["Il y a {KC} dans chacun de mes matins,", "Une présence {A} au creux de mes chemins."],
+        ["Quand {KC} sourit, le monde se souvient d'être beau,", "Et moi, je me souviens pourquoi battent mes mots."],
+        ["{KC}, ton rire est une porte ouverte sur l'été,", "Une fenêtre {A} que rien ne peut fermer."]
+    ],
+    tristesse: [
+        ["Il arrive que {KC} ne soit plus qu'une voix dans le vent,", "Mais même le vent laisse une ride sur l'étang."],
+        ["Je cherche {KC} partout où le silence habite,", "Et ne trouve que mon cœur qui récite."],
+        ["Depuis {KC}, les jours ont appris à se taire,", "Et mon cœur garde la chaise vide, comme une prière."]
+    ],
+    neutre: [
         ["{KC}, ton nom est une chambre où le temps se repose,", "Une lampe {A} qui veille au cœur de toutes mes choses."],
         ["Si je devais définir {KC}, je parlerais d'aurore,", "De ce qui vient avant le jour, et qui le fait éclore encore."],
         ["Ce que {KC} a ouvert en moi ne connaîtra plus l'hiver :", "C'est une porte vers le jour, une fenêtre ouverte sur la mer."],
-        ["Il arrive que {KC} ne soit plus qu'une voix dans le vent,", "Mais même le vent laisse une ride sur l'étang."]
+        ["Dire {KC}, c'est allumer une veilleuse en pleine nuit,", "Et savoir que, désormais, l'ombre conduit."]
     ]
 };
+
+function poolPrenom(themeChoisi) {
+    if (themeChoisi === 'amour') return [...prenom.amour, ...prenom.neutre];
+    if (themeChoisi === 'tristesse') return [...prenom.tristesse, ...prenom.neutre];
+    return [...prenom.neutre, ...prenom.amour];
+}
 
 // ============ UTILITAIRES ============
 
@@ -127,10 +137,11 @@ function extraireMotsCles(prompt) {
     return tokens.filter(m => !stop.has(m.toLowerCase()));
 }
 
-function remplir(patron, t, rotation) {
+function remplir(patron, t, rotation, motsCles) {
     let v = patron;
     if (v.includes('{KC}')) {
-        v = v.replace('{KC}', rotation.length > 0 && rotation.next() ? rotation.last : pick(t.noms));
+        const mot = motsCles.length > 0 ? rotation.next() : pick(t.noms);
+        v = v.replace('{KC}', mot);
     }
     v = v.replace(/\{N\}/g, () => pick(t.noms));
     v = v.replace(/\{V\}/g, () => pick(t.verbes));
@@ -143,29 +154,24 @@ function remplir(patron, t, rotation) {
 
 function createurRotation(motsCles) {
     let i = 0;
-    const rot = {
-        last: null,
-        next() {
-            if (motsCles.length === 0) return null;
-            rot.last = motsCles[i++ % motsCles.length];
-            return rot.last;
-        }
-    };
-    return rot;
+    return { next: () => motsCles[i++ % motsCles.length] };
 }
 
-// ============ GÉNÉRATION : PROGRESSION EN 4 MOUVEMENTS ============
+// ============ GÉNÉRATION ============
 
 function genererPoeme(prompt, nombreVers, themeChoisi) {
     const motsCles = extraireMotsCles(prompt);
     const t = themes[themeChoisi] || themes.general;
     const rotation = createurRotation(motsCles);
 
-    // Pools mélangés, pioche sans répétition (re-mélange si vide)
     const pools = {};
     for (const k in mouvements) pools[k] = melanger(mouvements[k]);
+    pools.prenom = melanger(poolPrenom(themeChoisi));
+
     const draw = (k) => {
-        if (pools[k].length === 0) pools[k] = melanger(mouvements[k]);
+        if (pools[k].length === 0) {
+            pools[k] = melanger(k === 'prenom' ? poolPrenom(themeChoisi) : mouvements[k]);
+        }
         return pools[k].pop();
     };
     const rand = (...opts) => opts[Math.floor(Math.random() * opts.length)];
@@ -173,22 +179,26 @@ function genererPoeme(prompt, nombreVers, themeChoisi) {
     const nbStrophes = Math.ceil(nombreVers / 4);
     const vers = [];
     let dernierPre = -2;
+    const peutPrenom = (s) => motsCles.length > 0 && (s - dernierPre) >= 2;
 
     for (let s = 0; s < nbStrophes; s++) {
         let plan;
-        if (nbStrophes === 1)          plan = [rand('ouverture', 'interieur'), 'chute'];
-        else if (s === 0)              plan = ['ouverture', rand('interieur', 'question')];
-        else if (s === nbStrophes - 1) plan = [rand('interieur', 'question'), 'chute'];
-        else                           plan = [rand('interieur', 'question'), rand('interieur', 'question', 'ouverture')];
 
-        // Glisse le prénom (~1 strophe sur 2 max, jamais 2 strophes de suite)
-        if (motsCles.length > 0 && Math.random() < 0.45 && (s - dernierPre) >= 2) {
-            plan[Math.random() < 0.5 ? 0 : 1] = 'prenom';
-            dernierPre = s;
+        if (nbStrophes === 1) {
+            // Poème très court : adresse au sujet (ou image) + chute
+            plan = [peutPrenom(s) && Math.random() < 0.85 ? 'prenom' : 'ouverture', 'chute'];
+        } else if (s === 0) {
+            plan = [peutPrenom(s) && Math.random() < 0.6 ? 'prenom' : 'ouverture', rand('interieur', 'question')];
+        } else if (s === nbStrophes - 1) {
+            plan = [peutPrenom(s) && Math.random() < 0.35 ? 'prenom' : rand('interieur', 'question'), 'chute'];
+        } else {
+            plan = [rand('interieur', 'question'), rand('interieur', 'question', 'ouverture')];
+            if (peutPrenom(s) && Math.random() < 0.4) plan[0] = 'prenom';
         }
 
         for (const nom of plan) {
-            const couplet = draw(nom).map(l => remplir(l, t, rotation));
+            if (nom === 'prenom') dernierPre = s;
+            const couplet = draw(nom).map(l => remplir(l, t, rotation, motsCles));
             vers.push(couplet[0], couplet[1]);
         }
     }
