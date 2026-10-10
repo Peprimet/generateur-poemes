@@ -5,255 +5,174 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ============ BASES DE DONNÉES POÉTIQUES ============
+// ============ BASES THÉMATIQUES ============
 
 const themes = {
     amour: {
-        mots: ['cœur', 'âme', 'amour', 'désir', 'passion', 'tendresse', 'étreinte', 'baiser', 'regard', 'soupir'],
-        vers: [
-            "Mon cœur s'emballe au rythme de tes pas,",
-            "Dans tes yeux, je me perds et me retrouve,",
-            "L'amour est un feu qui ne s'éteint pas,",
-            "Ton souffle sur ma peau, une douce épreuve.",
-            "Je t'aime comme la nuit aime la lune,",
-            "Silencieusement, profondément, sans fin.",
-            "Chaque battement de mon cœur t'importune,",
-            "Car il ne vit que pour toi, mon destin.",
-            "Tes mains sur mon visage, une caresse infinie,",
-            "Ton rire résonne comme un chant de vie.",
-            "Dans l'ombre de tes bras, je trouve mon abri,",
-            "Loin du monde, loin du bruit, loin de l'oubli.",
-            "Ton nom gravé dans l'or de ma mémoire,",
-            "Chaque instant avec toi est une victoire.",
-            "L'amour n'est pas un mot, c'est un univers,",
-            "Où deux âmes dansent au bord de la mer."
-        ]
+        noms: ['cœur', 'âme', 'amour', 'désir', 'passion', 'tendresse', 'étreinte', 'baiser', 'regard', 'soupir', 'serment', 'murmure', 'promesse', 'flamme', 'souffle', 'câlin'],
+        verbes: ['s\'embrase', 'tressaille', 's\'épanouit', 'palpite', 'frissonne', 'résonne', 's\'illumine', 's\'enflamme', 'chante', 'vibre', 's\'éveille', 'murmure', 'brûle', 's\'envole'],
+        adjectifs: ['ardent', 'tendre', 'éternel', 'passionné', 'doux', 'sauvage', 'vibrant', 'brûlant', 'amoureux', 'enivrant', 'tremblant', 'radieux', 'enlacé', 'infini'],
+        images: ['comme une flamme dans l\'obscurité', 'tel un baiser suspendu', 'à l\'image d\'un cœur qui bat', 'comme un matin de mai', 'tel un serment murmuré', 'comme une étoile filante dans la nuit'],
+        ambiances: ['une passion ardente', 'une tendresse infinie', 'un désir profond', 'une étreinte brûlante', 'un amour qui renaît', 'une douceur inattendue']
     },
     tristesse: {
-        mots: ['larmes', 'douleur', 'vide', 'absence', 'mélancolie', 'chagrin', 'silence', 'ombre', 'regret', 'solitude'],
-        vers: [
-            "Les larmes coulent comme une pluie d'automne,",
-            "Le silence pèse sur mon cœur brisé.",
-            "Dans l'ombre, je cherche ce qui me pardonne,",
-            "Mais le chagrin refuse de s'apaiser.",
-            "Ton absence creuse un vide en moi,",
-            "Un écho lointain qui ne répond plus.",
-            "Je marche seul, perdu, sans loi,",
-            "Dans les rues grises de mes souvenirs vaincus.",
-            "La mélancolie s'installe dans mes veines,",
-            "Comme un poison doux qui m'empoisonne lentement.",
-            "Chaque nuit, je compte mes peines,",
-            "Et le matin me trouve encore gémissant.",
-            "Le temps ne guérit rien, il ensevelit,",
-            "Sous la poussière des jours, nos regrets enfouis.",
-            "Je souris encore, mais c'est un masque fragile,",
-            "Derrière, il n'y a qu'un océan tranquille."
-        ]
+        noms: ['larmes', 'douleur', 'vide', 'absence', 'mélancolie', 'chagrin', 'silence', 'ombre', 'regret', 'solitude', 'adieu', 'cendres', 'oubli', 'sanglot', 'brume', 'soupir'],
+        verbes: ['s\'effiloche', 's\'éteint', 's\'efface', 'pleure', 's\'endort', 's\'éloigne', 'se fane', 's\'écoule', 'gémit', 's\'évanouit', 'se perd', 'tremble', 'se brise'],
+        adjectifs: ['amer', 'sombre', 'silencieux', 'glacé', 'déchiré', 'mélancolique', 'lointain', 'brisé', 'cendré', 'éteint', 'solitaire', 'perdu', 'abandonné'],
+        images: ['comme une pluie d\'automne', 'tel un écho qui s\'éteint', 'à l\'image d\'une flamme qui meurt', 'comme un souvenir qui s\'efface', 'tel un matin sans lumière', 'comme un bateau sans rivage'],
+        ambiances: ['une peine silencieuse', 'un regret lancinant', 'une solitude glacée', 'un deuil sans fin', 'une mélancolie profonde', 'une absence qui pèse']
     },
     nature: {
-        mots: ['forêt', 'océan', 'montagne', 'fleur', 'arbre', 'rivière', 'ciel', 'soleil', 'lune', 'étoile'],
-        vers: [
-            "La forêt chante sous le vent du matin,",
-            "Les feuilles dansent comme des papillons d'or.",
-            "La rivière serpente, un ruban argenté, serein,",
-            "Portant les rêves vers des rivages encore.",
-            "L'océan rugit, immense et éternel,",
-            "Ses vagues écrasent les rochers avec fureur.",
-            "Le soleil se couche, peignant le ciel,",
-            "De rouge, de pourpre, de mille couleurs.",
-            "La montagne se dresse, fière et immuable,",
-            "Témoin silencieux des siècles écoulés.",
-            "Une fleur éclot, fragile et adorable,",
-            "Dans l'herbe haute, humblement révélée.",
-            "La lune veille sur le monde endormi,",
-            "Sa lumière douce berce les insomnies.",
-            "Les étoiles scintillent, phares de l'infini,",
-            "Guidant les âmes perdues dans la nuit."
-        ]
+        noms: ['forêt', 'océan', 'montagne', 'fleur', 'arbre', 'rivière', 'ciel', 'soleil', 'lune', 'étoile', 'vent', 'aurore', 'cascade', 'vallon', 'rocher', 'source'],
+        verbes: ['danse', 'chante', 'murmure', 's\'éveille', 'coule', 'frémit', 's\'étire', 'resplendit', 'ondule', 's\'élance', 'bourdonne', 's\'étend', 'palpite'],
+        adjectifs: ['sauvage', 'serein', 'éternel', 'lumineux', 'vivant', 'verdoyant', 'argenté', 'paisible', 'majestueux', 'vibrant', 'immuable', 'éclatant'],
+        images: ['comme une rivière au printemps', 'tel un arbre centenaire', 'à l\'image d\'un ciel sans nuage', 'comme une fleur qui s\'ouvre', 'tel un vent dans les blés', 'comme un lac au petit matin'],
+        ambiances: ['une paix immense', 'une force tranquille', 'une liberté sauvage', 'une harmonie parfaite', 'une douceur printanière', 'un éternel renouveau']
     },
     nuit: {
-        mots: ['nuit', 'étoiles', 'lune', 'ombre', 'silence', 'rêve', 'insomnie', 'ténèbres', 'clair de lune', 'minuit'],
-        vers: [
-            "La nuit déploie son manteau d'étoiles,",
-            "Le vent murmure à travers les voiles.",
-            "Chaque mot est une étincelle,",
-            "Dans l'ombre douce, une flamme fidèle.",
-            "Le temps s'arrête, suspendu,",
-            "Entre le rêve et l'inconnu.",
-            "La plume danse, légère et libre,",
-            "Écrivant l'âme, vers par vers, en équilibre.",
-            "Minuit sonne, le monde se tait,",
-            "Seule la lune éclaire mes secrets.",
-            "Les ténèbres ne sont pas un ennemi,",
-            "Mais un refuge pour les cœurs meurtris.",
-            "Dans le silence, j'entends l'univers,",
-            "Il me parle de mystères et d'hivers.",
-            "L'insomnie est une compagne fidèle,",
-            "Elle m'accompagne jusqu'à l'aube nouvelle."
-        ]
+        noms: ['nuit', 'étoiles', 'lune', 'ombre', 'silence', 'rêve', 'insomnie', 'ténèbres', 'clair de lune', 'minuit', 'velours', 'songe', 'mystère', 'lanterne', 'voile'],
+        verbes: ['s\'étend', 'veille', 'glisse', 'scintille', 'murmure', 'flotte', 's\'étire', 'se déploie', 'danse', 'chuchote', 's\'allonge', 'se tait', 'luit'],
+        adjectifs: ['silencieux', 'mystérieux', 'profond', 'sombre', 'étoilé', 'argenté', 'paisible', 'enveloppant', 'lumineux', 'secret', 'ténébreux', 'velouté'],
+        images: ['comme un manteau d\'étoiles', 'tel un rêve qui s\'effiloche', 'à l\'image d\'une lune pâle', 'comme un voile sur le monde', 'tel un feu dans l\'ombre', 'comme un secret murmuré'],
+        ambiances: ['un silence infini', 'une étrangeté apaisante', 'un mystère doux', 'une paix nocturne', 'une beauté secrète', 'une rêverie profonde']
     },
     espoir: {
-        mots: ['lumière', 'espoir', 'demain', 'renaissance', 'aube', 'courage', 'force', 'avenir', 'renaître', 'flamme'],
-        vers: [
-            "Après la nuit la plus noire, l'aube renaît,",
-            "Le soleil perce les nuages gris.",
-            "L'espoir est une flamme qui ne s'éteint jamais,",
-            "Même quand le vent souffle sur nos esprits.",
-            "Demain est une page blanche à écrire,",
-            "Un chemin nouveau qui s'ouvre devant moi.",
-            "Le courage n'est pas l'absence de délire,",
-            "Mais la force de se lever, encore, malgré tout, malgré soi.",
-            "Chaque cicatrice est une leçon apprise,",
-            "Chaque larme versée nourrit la terre.",
-            "La renaissance commence dans la brise,",
-            "Quand on accepte enfin de se libérer de ses chaînes.",
-            "L'avenir n'est pas écrit, il est à inventer,",
-            "Pas à pas, mot à mot, jour après jour.",
-            "La lumière revient toujours, il faut y croire,",
-            "Car même l'hiver le plus long cède au printemps un jour."
-        ]
+        noms: ['lumière', 'espoir', 'demain', 'renaissance', 'aube', 'courage', 'force', 'avenir', 'flamme', 'promesse', 'soleil', 'germe', 'élan', 'étincelle'],
+        verbes: ['renaît', 's\'illumine', 'se lève', 'brille', 'grandit', 's\'élance', 'palpite', 'triomphe', 's\'éveille', 'jaillit', 'resplendit', 'éclôt', 'vibre'],
+        adjectifs: ['lumineux', 'radieux', 'invincible', 'éclatant', 'nouveau', 'brillant', 'prometteur', 'triomphant', 'renaissant', 'pur', 'vibrant'],
+        images: ['comme une aube après la nuit', 'tel un soleil qui perce les nuages', 'à l\'image d\'une graine qui germe', 'comme une flamme qui renaît', 'tel un printemps attendu', 'comme un chemin qui s\'ouvre'],
+        ambiances: ['une foi tenace', 'un renouveau vibrant', 'une victoire silencieuse', 'une aube nouvelle', 'une force tranquille', 'une promesse tenue']
     },
     general: {
-        mots: ['vie', 'temps', 'âme', 'cœur', 'rêve', 'monde', 'instant', 'mémoire', 'destin', 'vérité'],
-        vers: [
-            "Le temps passe, indifférent et souverain,",
-            "Emportant nos jours comme des feuilles au vent.",
-            "L'âme cherche sa route, un chemin incertain,",
-            "Entre les ombres d'hier et les lueurs de demain.",
-            "Chaque instant est un monde en soi,",
-            "Un univers complet qui naît et qui meurt.",
-            "La mémoire tisse ce que nous croyons être,",
-            "Un fil fragile qui relie nos peurs.",
-            "Le destin n'est pas une route tracée,",
-            "Mais un jardin sauvage qu'on cultive en silence.",
-            "La vérité se cache, souvent déguisée,",
-            "Derrière les masques de notre existence.",
-            "Nous sommes des voyageurs sans bagage,",
-            "Portant seulement nos rêves et nos images.",
-            "La vie est un poème qu'on écrit sans rature,",
-            "Avec l'encre de nos joies et de nos blessures."
-        ]
+        noms: ['vie', 'temps', 'âme', 'cœur', 'rêve', 'monde', 'instant', 'mémoire', 'destin', 'vérité', 'chemin', 'horizon', 'souvenir', 'écho', 'voyage', 'pensée'],
+        verbes: ['passe', 's\'écoule', 'danse', 'murmure', 'résonne', 's\'effiloche', 'palpite', 's\'élance', 'chemine', 'frémit', 's\'épanouit', 'glisse', 'tressaille'],
+        adjectifs: ['indifférent', 'souverain', 'profond', 'éphémère', 'vaste', 'fragile', 'ancien', 'lointain', 'éternel', 'mystérieux', 'paisible', 'vibrant'],
+        images: ['comme une feuille au vent', 'tel un mot oublié', 'à l\'image d\'un chemin sans fin', 'comme une ombre qui s\'allonge', 'tel un souvenir lointain', 'comme un écho dans la vallée'],
+        ambiances: ['une sagesse tranquille', 'une mélancolie douce', 'une force silencieuse', 'une paix profonde', 'un élan nouveau', 'une vérité nue']
     }
 };
 
-const banques = {
-    verbes: ['danse', 'chante', 'murmure', 's\'éveille', 's\'endort', 'brille', 'coule', 's\'envole', 'résonne', 'palpite', 's\'efface', 'renaît', 's\'illumine', 'tremble', 's\'apaise', 's\'embrase', 'flotte', 's\'effiloche', 's\'épanouit', 's\'évanouit'],
-    adjectifs: ['doux', 'amer', 'lumineux', 'sombre', 'fragile', 'éternel', 'silencieux', 'ardent', 'mélancolique', 'serein', 'sauvage', 'tendre', 'profond', 'léger', 'intense', 'mystérieux', 'brûlant', 'glacé', 'vibrant', 'immobile'],
-    images: ['comme une étoile filante dans le ciel nocturne', 'tel un souffle léger sur l\'eau tranquille', 'à l\'image d\'une fleur qui s\'ouvre au printemps', 'semblable à un écho perdu dans la vallée', 'comme le dernier rayon du soleil couchant', 'tel un secret murmuré à l\'oreille du vent', 'à la manière d\'une larme qui roule sur la joue', 'comme un papillon prisonnier de l\'ambre', 'tel un mot oublié sur les lèvres du temps', 'à l\'instar d\'une ombre qui s\'allonge au crépuscule', 'comme une mélodie suspendue entre deux silences', 'tel un rêve qui s\'effiloche à l\'aube', 'comme une flamme qui danse dans la nuit', 'tel un souvenir qui s\'estompe dans la brume', 'à l\'image d\'un oiseau libre dans l\'immensité'],
-    connecteurs: ['Et', 'Mais', 'Pourtant', 'Alors', 'Car', 'Puis', 'Tandis que', 'Lorsque', 'Si bien que', 'Ainsi', 'Cependant', 'Néanmoins', 'Or', 'Donc', 'Enfin'],
-    lieux: ['dans l\'ombre des forêts anciennes', 'au bord de l\'océan infini', 'sous le ciel étoilé', 'au cœur de la nuit silencieuse', 'dans les méandres du temps', 'au creux de l\'aube naissante', 'sur les rivages de l\'oubli', 'dans les jardins secrets de l\'âme', 'au sommet des montagnes brumeuses', 'dans les rues pavées de souvenirs', 'au fond des abysses du cœur', 'dans les champs dorés de l\'espoir'],
-    emotions: ['une joie pure et sauvage', 'une mélancolie douce et profonde', 'une passion ardente et dévorante', 'une sérénité absolue', 'une nostalgie tendre et amère', 'un émerveillement enfantin', 'une douleur qui transfigure', 'un espoir qui résiste à tout', 'une liberté enivrante', 'une paix qui apaise les tempêtes']
-};
+// ============ PATRONS DE VERS RIMÉS ============
 
-// ============ FONCTIONS DE GÉNÉRATION ============
+const patronsGeneraux = [
+    ["Quand {N} {V}, lent et {A},", "La lumière s'installe et prend tout son pouvoir."],
+    ["Un {N} {V}, sans peur ni douleur,", "Et dans le silence, renaît la douceur."],
+    ["Là où {N} {V}, {A} et {A},", "Une paix ancienne s'installe, éclatante."],
+    ["Le {N} qui {V} semble s'éterniser,", "Comme un secret que l'on n'ose dévoiler."],
+    ["Et soudain {N} {V}, {I},", "Dans le silence, une nouvelle vie."],
+    ["Je revois ce {N} qui {V} sans jamais,", "Laisser le temps effacer ses attraits."],
+    ["Un {N} {V}, {A}, dans la pénombre pure,", "{I}, à la fois fragile et sûre."],
+    ["Dans le matin qui {V}, {A} et serein,", "{I}, comme un lointain refrain."],
+    ["Lorsque {N} {V} au creux du paysage,", "{I}, un souvenir qui prend de l'âge."],
+    ["Voir {N} {V}, doucement s'effacer,", "Et dans ce geste, tout recommencer."],
+    ["Un {N} {A} traverse l'espace,", "Et dans le vent, une nouvelle trace."],
+    ["Quand le {N} {V}, tout semble s'arrêter,", "Comme si le monde voulait s'écouter."],
+    ["{A} et {A}, le {N} {V},", "Et dans cet instant, le temps se fige."],
+    ["Le {N} {V}, {I},", "Laissant derrière lui un parfum d'été."],
+    ["Un {N} {A} se dresse devant moi,", "Et dans ses yeux, je retrouve ma foi."],
+];
+
+const patronsAvecPrenom = [
+    ["{KC} {V} au cœur de la nuit,", "Et dans ce souffle, tout s'épanouit."],
+    ["Je garde en moi l'image de {KC},", "{I}, à l'infini, à jamais."],
+    ["Quand {KC} {V}, le monde se tait,", "{I}, dans un silence parfait."],
+    ["Ô {KC}, ton nom que rien n'efface,", "{I}, dans l'éternité de l'espace."],
+    ["{KC} {V}, et je me souviens,", "De tous ces jours qui redeviennent miens."],
+    ["Pour {KC}, les mots n'ont plus de loi,", "{I}, à l'abri de tout émoi."],
+    ["Dans mes pensées, {KC} {V} encore,", "{I}, comme un trésor que l'on adore."],
+    ["Si {KC} {V}, alors le temps se brise,", "Et dans l'instant, tout se précise."],
+    ["{KC}, ton {N} {A} m'enveloppe,", "Comme un songe doux qui jamais ne s'échappe."],
+    ["À l'écoute de {KC}, mon âme s'apaise,", "Et dans ce calme, la lumière se plaît."],
+];
+
+const patronsLibres = [
+    ["Parfois, un souffle {A} s'élève,", "Et tout ce qui pèse, soudain, s'achève."],
+    ["Dans l'ombre, une voix {A} résonne,", "Et rien, jamais, ne sera plus comme avant."],
+    ["Un instant fragile, un regard {A},", "Et le monde, lentement, se déploie."],
+    ["L'air se fait {A}, le silence s'étire,", "Comme un rêve qui refuse de finir."],
+    ["Un écho {A} traverse l'espace,", "Et dans le vent, une nouvelle trace."],
+    ["Le monde entier retient son souffle un instant,", "Puis reprend sa course, doucement."],
+    ["Entre deux silences, une voix s'élève,", "Et dessine, invisible, un nouveau rêve."],
+];
+
+// ============ UTILITAIRES ============
+
+function melanger(arr) {
+    const c = [...arr];
+    for (let i = c.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [c[i], c[j]] = [c[j], c[i]];
+    }
+    return c;
+}
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 function extraireMotsCles(prompt) {
-    const mots = prompt.toLowerCase().replace(/[.,!?;:'"()]/g, '').split(/\s+/).filter(mot => mot.length > 3);
-    const stopWords = ['pour', 'avec', 'dans', 'sur', 'sous', 'entre', 'vers', 'chez', 'par', 'de', 'du', 'des', 'le', 'la', 'les', 'un', 'une', 'ce', 'cette', 'ces', 'mon', 'ma', 'mes', 'ton', 'ta', 'tes', 'son', 'sa', 'ses', 'notre', 'votre', 'leur', 'qui', 'que', 'quoi', 'dont', 'où', 'quand', 'comment', 'pourquoi', 'si', 'mais', 'ou', 'et', 'donc', 'or', 'ni', 'car', 'je', 'tu', 'il', 'elle', 'nous', 'vous', 'ils', 'elles', 'suis', 'es', 'est', 'sommes', 'êtes', 'sont', 'ai', 'as', 'a', 'avons', 'avez', 'ont', 'fait', 'faire', 'dit', 'dire', 'veux', 'vouloir', 'peux', 'pouvoir', 'dois', 'devoir', 'vais', 'aller'];
-    return mots.filter(mot => !stopWords.includes(mot)).slice(0, 5);
+    const stop = new Set(['pour','avec','dans','sur','sous','entre','vers','chez','par','de','du','des','le','la','les','un','une','ce','cette','ces','mon','ma','mes','ton','ta','tes','son','sa','ses','notre','votre','leur','qui','que','quoi','dont','où','quand','comment','pourquoi','si','mais','ou','et','donc','or','ni','car','je','tu','il','elle','nous','vous','ils','elles','suis','es','est','sommes','êtes','sont','ai','as','a','avons','avez','ont','fait','faire','dit','dire','veux','vouloir','peux','pouvoir','dois','devoir','vais','aller']);
+    const tokens = prompt.replace(/[.,!?;:'"()]/g, ' ').split(/\s+/).filter(m => m.length > 2);
+    return tokens.filter(m => !stop.has(m.toLowerCase()));
 }
 
-function melangerTableau(arr) {
-    const copie = [...arr];
-    for (let i = copie.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copie[i], copie[j]] = [copie[j], copie[i]];
+function remplir(patron, t, kcRotation) {
+    let v = patron;
+    if (v.includes('{KC}') && kcRotation.length > 0) {
+        v = v.replace('{KC}', kcRotation.next());
+    } else if (v.includes('{KC}')) {
+        v = v.replace('{KC}', pick(t.noms));
     }
-    return copie;
+    v = v.replace(/\{N\}/g, () => pick(t.noms));
+    v = v.replace(/\{V\}/g, () => pick(t.verbes));
+    v = v.replace(/\{A\}/g, () => pick(t.adjectifs));
+    v = v.replace(/\{I\}/g, () => pick(t.images));
+    v = v.replace(/\{B\}/g, () => pick(t.ambiances));
+    v = v.charAt(0).toUpperCase() + v.slice(1);
+    return v;
 }
 
-function genererVers(motsCles, theme, index, usedPhrases) {
-    let phrase = "";
-    let attempts = 0;
-    
-    // Éviter les répétitions immédiates
-    while (attempts < 5) {
-        const structures = [
-            () => {
-                const sujet = theme.mots[Math.floor(Math.random() * theme.mots.length)];
-                const verbe = banques.verbes[Math.floor(Math.random() * banques.verbes.length)];
-                const adj = banques.adjectifs[Math.floor(Math.random() * banques.adjectifs.length)];
-                return `${sujet.charAt(0).toUpperCase() + sujet.slice(1)} ${verbe}, ${adj} et libre,`;
-            },
-            () => {
-                const image = banques.images[Math.floor(Math.random() * banques.images.length)];
-                const motCle = motsCles[Math.floor(Math.random() * motsCles.length)] || 'rêve';
-                return `${image.charAt(0).toUpperCase() + image.slice(1)}, portant le souffle de ${motCle}.`;
-            },
-            () => {
-                const lieu = banques.lieux[Math.floor(Math.random() * banques.lieux.length)];
-                const emotion = banques.emotions[Math.floor(Math.random() * banques.emotions.length)];
-                const motCle = motsCles[Math.floor(Math.random() * motsCles.length)] || 'âme';
-                return `${lieu.charAt(0).toUpperCase() + lieu.slice(1)}, où ${emotion} éveille ${motCle}.`;
-            },
-            () => {
-                const connecteur = banques.connecteurs[Math.floor(Math.random() * banques.connecteurs.length)];
-                const sujet = theme.mots[Math.floor(Math.random() * theme.mots.length)];
-                const verbe = banques.verbes[Math.floor(Math.random() * banques.verbes.length)];
-                const adj = banques.adjectifs[Math.floor(Math.random() * banques.adjectifs.length)];
-                return `${connecteur} ${sujet} ${verbe}, ${adj} comme l'aurore,`;
-            },
-            () => {
-                const motCle = motsCles[Math.floor(Math.random() * motsCles.length)] || 'temps';
-                const verbe = banques.verbes[Math.floor(Math.random() * banques.verbes.length)];
-                const adj = banques.adjectifs[Math.floor(Math.random() * banques.adjectifs.length)];
-                return `Le ${motCle} ${verbe}, ${adj} et souverain,`;
-            },
-            () => {
-                const versTheme = theme.vers[Math.floor(Math.random() * theme.vers.length)];
-                return versTheme;
-            }
-        ];
-        
-        phrase = structures[index % structures.length]();
-        
-        // Vérifier si la phrase n'a pas déjà été utilisée
-        if (!usedPhrases.has(phrase)) {
-            usedPhrases.add(phrase);
-            break;
-        }
-        attempts++;
-    }
-    
-    return phrase;
+function createurRotation(motsCles) {
+    let i = 0;
+    return {
+        next: () => motsCles.length > 0 ? motsCles[i++ % motsCles.length] : null
+    };
 }
+
+// ============ GÉNÉRATION DU POÈME ============
 
 function genererPoeme(prompt, nombreVers, themeChoisi) {
     const motsCles = extraireMotsCles(prompt);
-    const theme = themes[themeChoisi] || themes.general;
+    const t = themes[themeChoisi] || themes.general;
+    const rotation = createurRotation(motsCles);
+
+    const pool = melanger([...patronsGeneraux, ...patronsLibres]);
+
     const vers = [];
-    const usedPhrases = new Set();
-    
-    const versThemeMelanges = melangerTableau(theme.vers);
-    let themeIndex = 0;
-    
-    // Générer exactement le nombre de vers demandé (1 phrase = 1 ligne)
-    for (let i = 0; i < nombreVers; i++) {
-        // Alterner entre les vers pré-écrits du thème et les vers générés
-        if (i % 3 === 0 && themeIndex < versThemeMelanges.length) {
-            let v = versThemeMelanges[themeIndex];
-            // Éviter les répétitions même pour les vers du thème
-            while (usedPhrases.has(v) && themeIndex < versThemeMelanges.length) {
-                themeIndex++;
-                v = versThemeMelanges[themeIndex];
-            }
-            if (themeIndex < versThemeMelanges.length) {
-                usedPhrases.add(v);
-                vers.push(v);
-                themeIndex++;
-            } else {
-                vers.push(genererVers(motsCles, theme, i, usedPhrases));
-            }
+    let poolIndex = 0;
+    let dernierAvecPrenom = -2;
+
+    while (vers.length < nombreVers) {
+        let patron;
+
+        if (motsCles.length > 0 && Math.random() < 0.35 && (vers.length / 4 - dernierAvecPrenom) >= 2) {
+            patron = pick(patronsAvecPrenom);
+            dernierAvecPrenom = vers.length / 4;
+        } else if (Math.random() < 0.25) {
+            patron = pick(patronsLibres);
         } else {
-            vers.push(genererVers(motsCles, theme, i, usedPhrases));
+            patron = pool[poolIndex++ % pool.length];
         }
+
+        const couplet = patron.map(ligne => remplir(ligne, t, rotation));
+        vers.push(couplet[0], couplet[1]);
     }
-    
+
     const strophes = [];
-    for (let i = 0; i < vers.length; i += 4) {
+    for (let i = 0; i < nombreVers; i += 4) {
         strophes.push(vers.slice(i, i + 4).join('\n'));
     }
-    return `${prompt}\n\n${strophes.join('\n\n')}`;
+
+    const titre = prompt.trim().charAt(0).toUpperCase() + prompt.trim().slice(1);
+    return `${titre}\n\n${strophes.join('\n\n')}`;
 }
 
 // ============ ROUTE API ============
