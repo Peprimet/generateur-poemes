@@ -132,6 +132,32 @@
             transition: background .15s;
         }
         .copyBtn:hover { background: rgba(189,147,249,.12); }
+
+        /* ===== NOUVEAU : révélation progressive des vers ===== */
+        .vers {
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity .6s ease, transform .6s ease;
+        }
+        .output.revele .vers { opacity: 1; transform: none; }
+        .vers.vide { height: .9em; }
+
+        /* ===== NOUVEAU : barre d'actions sous le poème ===== */
+        .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+        .actions .copyBtn { margin-top: 0; }
+
+        /* ===== NOUVEAU : compteur de caractères + erreur inline ===== */
+        .sous-champ {
+            display: flex; justify-content: space-between; align-items: baseline;
+            margin-top: 5px; font-size: .75em; color: #6b7089; min-height: 1.3em;
+        }
+        #promptErreur { color: #ff8aa0; }
+        .champ-erreur { border-color: #ff5c7a !important; animation: secousse .4s; }
+        @keyframes secousse {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
     </style>
 </head>
 <body>
@@ -141,7 +167,11 @@
     <p class="subtitle">Décrivez le poème que vous souhaitez obtenir</p>
 
     <label for="prompt">Votre demande :</label>
-    <textarea id="prompt" maxlength="300" placeholder="Ex : un amour perdu sous la pluie, la solitude d'un phare, le dernier été de l'enfance..."></textarea>
+    <textarea id="prompt" maxlength="300" placeholder="Ex : un amour perdu sous la pluie, la solitude d'un phare, le dernier été de l'enfance...  (Ctrl+Entrée pour composer)"></textarea>
+    <div class="sous-champ">
+        <span id="promptErreur"></span>
+        <span id="charCount">0 / 300</span>
+    </div>
 
     <label for="theme">Thème :</label>
     <select id="theme">
@@ -164,73 +194,157 @@
 
     <button id="generateBtn">✨ Composer le poème</button>
 
-    <div id="result" class="output"></div>
+    <div id="result" class="output" role="status" aria-live="polite"></div>
 </div>
 
 <script>
     const btn = document.getElementById('generateBtn');
     const resultDiv = document.getElementById('result');
+    const promptEl = document.getElementById('prompt');
+    const charCount = document.getElementById('charCount');
+    const promptErreur = document.getElementById('promptErreur');
+
     let currentPoem = '';
+    let derniereDemande = null;
+    let timerAttente = null;
+
+    const MESSAGES_ATTENTE = [
+        "L'encre se réchauffe…",
+        "Le poème cherche ses rimes…",
+        "Les images s'assemblent…",
+        "Un dernier vers résiste…",
+        "Presque à toi…"
+    ];
 
     function esc(s) {
         return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
+    /* --- Compteur de caractères + effacement de l'erreur --- */
+    promptEl.addEventListener('input', () => {
+        charCount.textContent = `${promptEl.value.length} / 300`;
+        promptErreur.textContent = '';
+    });
+
+    /* --- Ctrl+Entrée (ou Cmd+Entrée sur Mac) = composer --- */
+    promptEl.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') btn.click();
+    });
+
+    /* --- Messages d'attente rotatifs pendant l'appel réseau --- */
+    function demarrerAttente() {
+        resultDiv.classList.remove('revele');
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `<div class="poem-body loading">${esc(MESSAGES_ATTENTE[0])}</div>`;
+        let i = 0;
+        timerAttente = setInterval(() => {
+            i = (i + 1) % MESSAGES_ATTENTE.length;
+            const el = resultDiv.querySelector('.loading');
+            if (el) el.textContent = MESSAGES_ATTENTE[i];
+        }, 2600);
+    }
+    function arreterAttente() { clearInterval(timerAttente); }
+
+    /* --- Affichage du poème, révélé vers par vers --- */
     function renderPoem(poem, source) {
         const idx = poem.indexOf('\n');
-        const title = idx === -1 ? poem : poem.slice(0, idx).trim();
-        const body = idx === -1 ? '' : poem.slice(idx + 1).trim();
+        const titre = (idx === -1 ? poem : poem.slice(0, idx)).trim();
+        const corps = (idx === -1 ? '' : poem.slice(idx + 1)).trim();
+
         const note = source === 'local'
             ? `<div class="note">✦ Poème de secours : l'inspiration (IA) est momentanément indisponible. Réessaie un peu plus tard pour une version plus personnelle.</div>`
             : '';
+
+        const lignesHTML = corps.split('\n').map(l =>
+            l.trim() ? `<div class="vers">${esc(l)}</div>` : `<div class="vers vide"></div>`
+        ).join('');
+
+        resultDiv.classList.remove('revele');
         resultDiv.innerHTML =
-            `<div class="poem-title">${esc(title)}</div>` +
-            `<div class="poem-body">${esc(body)}</div>` +
+            `<div class="poem-title">${esc(titre)}</div>` +
+            `<div class="poem-body">${lignesHTML}</div>` +
             note +
-            `<button class="copyBtn" id="copyBtn">📋 Copier le poème</button>`;
+            `<div class="actions" id="actions"></div>`;
+
+        // Chaque vers apparaît avec un léger décalage.
+        // Le pas s'adapte au nombre de vers pour que la révélation
+        // ne dépasse pas ~3 secondes, même sur un poème de 32 vers.
+        const versEls = resultDiv.querySelectorAll('.vers');
+        const pas = Math.min(130, Math.ceil(2800 / Math.max(1, versEls.length)));
+        versEls.forEach((el, k) => { el.style.transitionDelay = `${k * pas}ms`; });
+
+        // Double requestAnimationFrame : laisse le navigateur poser les vers
+        // invisibles avant d'ajouter la classe qui déclenche la transition.
+        requestAnimationFrame(() => requestAnimationFrame(() => resultDiv.classList.add('revele')));
+
+        construireActions();
+    }
+
+    /* --- Boutons sous le poème : copier / autre version / télécharger --- */
+    function construireActions() {
+        document.getElementById('actions').innerHTML =
+            `<button class="copyBtn" id="copyBtn">📋 Copier</button>` +
+            `<button class="copyBtn" id="againBtn">🔄 Autre version</button>` +
+            `<button class="copyBtn" id="dlBtn">⬇️ Télécharger</button>`;
+
         document.getElementById('copyBtn').onclick = async () => {
-            try {
-                await navigator.clipboard.writeText(currentPoem);
+            if (await copierTexte(currentPoem)) {
                 const b = document.getElementById('copyBtn');
                 b.innerText = '✅ Copié !';
-                setTimeout(() => b.innerText = '📋 Copier le poème', 1500);
-            } catch (e) {}
+                setTimeout(() => b.innerText = '📋 Copier', 1500);
+            }
+        };
+        document.getElementById('againBtn').onclick = () => {
+            if (derniereDemande) lancerGeneration(derniereDemande);
+        };
+        document.getElementById('dlBtn').onclick = () => {
+            const nom = (currentPoem.split('\n')[0] || 'poeme')
+                .replace(/[^\p{L}\p{N} -]/gu, '').trim()
+                .replace(/\s+/g, '-').toLowerCase() || 'poeme';
+            const blob = new Blob([currentPoem + "\n\n— Plume d'Étoile\n"], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${nom}.txt`;
+            a.click();
+            URL.revokeObjectURL(a.href);
         };
     }
 
-    btn.addEventListener('click', async () => {
-        const promptText = document.getElementById('prompt').value;
-        const linesCount = document.getElementById('lines').value;
-        const themeSelected = document.getElementById('theme').value;
-
-        if (!promptText.trim()) {
-            alert("Dis-moi quel genre de poème tu veux générer !");
-            return;
+    /* --- Copier avec repli pour les navigateurs plus anciens --- */
+    async function copierTexte(t) {
+        try { await navigator.clipboard.writeText(t); return true; }
+        catch {
+            const ta = document.createElement('textarea');
+            ta.value = t;
+            document.body.appendChild(ta);
+            ta.select();
+            const ok = document.execCommand('copy');
+            ta.remove();
+            return ok;
         }
+    }
 
-        // Compte à rebours de 3 secondes
-        btn.disabled = true;
-        let timeLeft = 3;
-        btn.innerText = `Patientez... ${timeLeft}s`;
-        const countdown = setInterval(() => {
-            timeLeft--;
-            if (timeLeft > 0) btn.innerText = `Patientez... ${timeLeft}s`;
-            else { clearInterval(countdown); btn.innerText = '✨ Composer le poème'; }
-        }, 1000);
-
+    function afficherErreur(msg) {
+        resultDiv.classList.remove('revele');
         resultDiv.style.display = 'block';
-        resultDiv.innerHTML = `<div class="poem-body loading">L'inspiration vient... composition en cours...</div>`;
+        resultDiv.innerHTML = `<div class="poem-body loading">⚠️ ${esc(msg)}</div>`;
+    }
 
-        const requete = fetch('/generate-poem', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: promptText, lines: linesCount, theme: themeSelected })
-        }).then(r => r.json());
+    /* --- Lancement d'une génération --- */
+    async function lancerGeneration(demande) {
+        derniereDemande = demande;
+        btn.disabled = true;
+        btn.innerText = '🖋️ Composition en cours…';
+        demarrerAttente();
 
         try {
-            // Attend au minimum 3 s (le temps du compte à rebours), même si le serveur répond plus vite
-            const [data] = await Promise.all([requete, new Promise(r => setTimeout(r, 3000))]);
-            clearInterval(countdown);
+            const r = await fetch('/generate-poem', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(demande)
+            });
+            const data = await r.json();
+            arreterAttente();
             btn.disabled = false;
             btn.innerText = '✨ Composer le poème';
 
@@ -238,14 +352,32 @@
                 currentPoem = data.poem;
                 renderPoem(data.poem, data.source);
             } else {
-                resultDiv.innerHTML = `<div class="poem-body loading">Erreur : ${esc(data.error || 'inconnue')}</div>`;
+                afficherErreur(data.error || 'erreur inconnue');
             }
-        } catch (error) {
-            clearInterval(countdown);
+        } catch (e) {
+            arreterAttente();
             btn.disabled = false;
             btn.innerText = '✨ Composer le poème';
-            resultDiv.innerHTML = `<div class="poem-body loading">Impossible de se connecter au serveur.</div>`;
+            afficherErreur('Impossible de joindre le poète — vérifie ta connexion et réessaie.');
         }
+    }
+
+    /* --- Clic sur le bouton principal --- */
+    btn.addEventListener('click', () => {
+        const texte = promptEl.value.trim();
+        if (!texte) {
+            promptErreur.textContent = "Dis-moi d'abord de quoi doit parler le poème 🙏";
+            promptEl.classList.remove('champ-erreur');
+            void promptEl.offsetWidth; // force le reflow pour relancer l'animation
+            promptEl.classList.add('champ-erreur');
+            promptEl.focus();
+            return;
+        }
+        lancerGeneration({
+            prompt: texte,
+            lines: document.getElementById('lines').value,
+            theme: document.getElementById('theme').value
+        });
     });
 </script>
 
