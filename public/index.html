@@ -133,7 +133,7 @@
         }
         .copyBtn:hover { background: rgba(189,147,249,.12); }
 
-        /* ===== Révélation progressive des vers ===== */
+        /* Révélation progressive des vers */
         .vers {
             opacity: 0;
             transform: translateY(8px);
@@ -142,11 +142,11 @@
         .output.revele .vers { opacity: 1; transform: none; }
         .vers.vide { height: .9em; }
 
-        /* ===== Barre d'actions sous le poème ===== */
+        /* Barre d'actions sous le poème */
         .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
         .actions .copyBtn { margin-top: 0; }
 
-        /* ===== Compteur de caractères + erreur inline ===== */
+        /* Compteur de caractères + erreur inline */
         .sous-champ {
             display: flex; justify-content: space-between; align-items: baseline;
             margin-top: 5px; font-size: .75em; color: #6b7089; min-height: 1.3em;
@@ -220,18 +220,18 @@
         return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    /* --- Compteur de caractères + effacement de l'erreur --- */
+    /* Compteur de caractères + effacement de l'erreur */
     promptEl.addEventListener('input', () => {
         charCount.textContent = `${promptEl.value.length} / 300`;
         promptErreur.textContent = '';
     });
 
-    /* --- Ctrl+Entrée (ou Cmd+Entrée sur Mac) = composer --- */
+    /* Ctrl+Entrée (ou Cmd+Entrée sur Mac) = composer */
     promptEl.addEventListener('keydown', e => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') btn.click();
     });
 
-    /* --- Messages d'attente rotatifs pendant l'appel réseau --- */
+    /* Messages d'attente rotatifs pendant l'appel réseau */
     function demarrerAttente() {
         resultDiv.classList.remove('revele');
         resultDiv.style.display = 'block';
@@ -245,7 +245,7 @@
     }
     function arreterAttente() { clearInterval(timerAttente); }
 
-    /* --- Affichage du poème, révélé vers par vers --- */
+    /* Affichage du poème, révélé vers par vers */
     function renderPoem(poem, source) {
         const idx = poem.indexOf('\n');
         const titre = (idx === -1 ? poem : poem.slice(0, idx)).trim();
@@ -266,8 +266,6 @@
             note +
             `<div class="actions" id="actions"></div>`;
 
-        // Chaque vers apparaît avec un léger décalage, adapté au nombre
-        // de vers pour que la révélation reste sous ~3 secondes.
         const versEls = resultDiv.querySelectorAll('.vers');
         const pas = Math.min(130, Math.ceil(2800 / Math.max(1, versEls.length)));
         versEls.forEach((el, k) => { el.style.transitionDelay = `${k * pas}ms`; });
@@ -277,7 +275,7 @@
         construireActions();
     }
 
-    /* --- Boutons sous le poème : copier / autre version / télécharger --- */
+    /* Boutons sous le poème : copier / autre version / télécharger */
     function construireActions() {
         document.getElementById('actions').innerHTML =
             `<button class="copyBtn" id="copyBtn">📋 Copier</button>` +
@@ -307,7 +305,7 @@
         };
     }
 
-    /* --- Copier avec repli pour les navigateurs plus anciens --- */
+    /* Copier avec repli pour les navigateurs plus anciens */
     async function copierTexte(t) {
         try { await navigator.clipboard.writeText(t); return true; }
         catch {
@@ -327,7 +325,7 @@
         resultDiv.innerHTML = `<div class="poem-body loading">⚠️ ${esc(msg)}</div>`;
     }
 
-    /* --- Lancement d'une génération --- */
+    /* Lancement d'une génération */
     async function lancerGeneration(demande) {
         derniereDemande = demande;
         btn.disabled = true;
@@ -364,13 +362,13 @@
         }
     }
 
-    /* --- Clic sur le bouton principal --- */
+    /* Clic sur le bouton principal */
     btn.addEventListener('click', () => {
         const texte = promptEl.value.trim();
         if (!texte) {
             promptErreur.textContent = "Dis-moi d'abord de quoi doit parler le poème 🙏";
             promptEl.classList.remove('champ-erreur');
-            void promptEl.offsetWidth; // relance l'animation
+            void promptEl.offsetWidth;
             promptEl.classList.add('champ-erreur');
             promptEl.focus();
             return;
