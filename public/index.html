@@ -133,7 +133,7 @@
         }
         .copyBtn:hover { background: rgba(189,147,249,.12); }
 
-        /* ===== NOUVEAU : révélation progressive des vers ===== */
+        /* ===== Révélation progressive des vers ===== */
         .vers {
             opacity: 0;
             transform: translateY(8px);
@@ -142,11 +142,11 @@
         .output.revele .vers { opacity: 1; transform: none; }
         .vers.vide { height: .9em; }
 
-        /* ===== NOUVEAU : barre d'actions sous le poème ===== */
+        /* ===== Barre d'actions sous le poème ===== */
         .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
         .actions .copyBtn { margin-top: 0; }
 
-        /* ===== NOUVEAU : compteur de caractères + erreur inline ===== */
+        /* ===== Compteur de caractères + erreur inline ===== */
         .sous-champ {
             display: flex; justify-content: space-between; align-items: baseline;
             margin-top: 5px; font-size: .75em; color: #6b7089; min-height: 1.3em;
@@ -266,15 +266,12 @@
             note +
             `<div class="actions" id="actions"></div>`;
 
-        // Chaque vers apparaît avec un léger décalage.
-        // Le pas s'adapte au nombre de vers pour que la révélation
-        // ne dépasse pas ~3 secondes, même sur un poème de 32 vers.
+        // Chaque vers apparaît avec un léger décalage, adapté au nombre
+        // de vers pour que la révélation reste sous ~3 secondes.
         const versEls = resultDiv.querySelectorAll('.vers');
         const pas = Math.min(130, Math.ceil(2800 / Math.max(1, versEls.length)));
         versEls.forEach((el, k) => { el.style.transitionDelay = `${k * pas}ms`; });
 
-        // Double requestAnimationFrame : laisse le navigateur poser les vers
-        // invisibles avant d'ajouter la classe qui déclenche la transition.
         requestAnimationFrame(() => requestAnimationFrame(() => resultDiv.classList.add('revele')));
 
         construireActions();
@@ -343,22 +340,27 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(demande)
             });
-            const data = await r.json();
+            const texte = await r.text();
+            let data = null;
+            try { data = JSON.parse(texte); } catch {}
+
             arreterAttente();
             btn.disabled = false;
             btn.innerText = '✨ Composer le poème';
 
-            if (data.poem) {
+            if (data && data.poem) {
                 currentPoem = data.poem;
                 renderPoem(data.poem, data.source);
+            } else if (data && data.error) {
+                afficherErreur(data.error);
             } else {
-                afficherErreur(data.error || 'erreur inconnue');
+                afficherErreur(`Le serveur a répondu (HTTP ${r.status}) mais pas comme prévu.`);
             }
         } catch (e) {
             arreterAttente();
             btn.disabled = false;
             btn.innerText = '✨ Composer le poème';
-            afficherErreur('Impossible de joindre le poète — vérifie ta connexion et réessaie.');
+            afficherErreur('Serveur injoignable — il dort peut-être (Render gratuit) ou il a crashé.');
         }
     }
 
@@ -368,7 +370,7 @@
         if (!texte) {
             promptErreur.textContent = "Dis-moi d'abord de quoi doit parler le poème 🙏";
             promptEl.classList.remove('champ-erreur');
-            void promptEl.offsetWidth; // force le reflow pour relancer l'animation
+            void promptEl.offsetWidth; // relance l'animation
             promptEl.classList.add('champ-erreur');
             promptEl.focus();
             return;
