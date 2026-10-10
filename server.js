@@ -575,7 +575,8 @@ app.post('/generate-poem', async (req, res) => {
     console.log(`[poème] thème=${themeChoisi} vers=${nombreVers} source=${source}`);
     res.json({ poem: poeme, source });
 });
-
+// Health check pour Render
+app.get('/health', (req, res) => res.json({ ok: true }));
 const PORT = process.env.PORT || 10000;
 if (require.main === module) {
     app.listen(PORT, () => {
