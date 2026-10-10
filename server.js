@@ -10,11 +10,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 const GROQ_KEY = process.env.GROQ_API_KEY || null;
 const GEMINI_KEY = process.env.GEMINI_API_KEY || null;
 
-// Plusieurs modèles possibles, séparés par des virgules : ils sont essayés dans l'ordre.
-// Tu peux les changer sans toucher au code, avec les variables GROQ_MODEL / GEMINI_MODEL sur Render.
 const liste = (valeur) => valeur.split(',').map(s => s.trim()).filter(Boolean);
 const GROQ_MODELS = liste(process.env.GROQ_MODEL || 'openai/gpt-oss-120b,llama-3.3-70b-versatile');
-const GEMINI_MODELS = liste(process.env.GEMINI_MODEL || 'gemini-3.8-flash,gemini-3.5-flash-lite');
+const GEMINI_MODELS = liste(process.env.GEMINI_MODEL || 'gemini-2.5-flash,gemini-2.0-flash-lite');
 
 const VERS_AUTORISES = [4, 8, 16, 24, 32];
 const THEMES_AUTORISES = ['libre', 'amour', 'tristesse', 'nature', 'nuit', 'espoir'];
@@ -54,8 +52,6 @@ setInterval(() => {
 
 // ============================================================
 //  GÉNÉRATION PAR IA
-//  Ce qui fait la profondeur d'un poème, c'est la consigne :
-//  chaque thème a une intention, un mouvement, des images et des clichés à bannir.
 // ============================================================
 const THEMES_IA = {
     amour: {
@@ -147,7 +143,7 @@ async function appelerGroq(modele, system, user) {
         model: modele,
         temperature: 0.95,
         top_p: 0.95,
-        max_completion_tokens: 4000, // large : les modèles « raisonnement » comptent leur réflexion dedans
+        max_completion_tokens: 4000,
         messages: [{ role: 'system', content: system }, { role: 'user', content: user }]
     };
     if (modele.includes('gpt-oss')) corps.reasoning_effort = 'medium';
@@ -170,7 +166,7 @@ async function appelerGemini(modele, system, user) {
         body: JSON.stringify({
             systemInstruction: { parts: [{ text: system }] },
             contents: [{ role: 'user', parts: [{ text: user }] }],
-            generationConfig: { maxOutputTokens: 4096 } // température par défaut : recommandée pour Gemini 3
+            generationConfig: { maxOutputTokens: 4096 }
         }),
         signal: AbortSignal.timeout(40000)
     });
@@ -185,7 +181,7 @@ const FOURNISSEURS = [
     { nom: 'Gemini', cle: GEMINI_KEY, modeles: GEMINI_MODELS, appeler: appelerGemini }
 ];
 
-// ---- Nettoyage de la réponse : titre + strophes de 4 vers, nombre de vers vérifié ----
+// ---- Nettoyage de la réponse ----
 function mettreEnForme(brut, nombreVers, titreRepli) {
     if (!brut) return null;
 
@@ -205,12 +201,12 @@ function mettreEnForme(brut, nombreVers, titreRepli) {
         .replace(/[.:;,]+$/, '')
         .trim();
     if (!titre || titre.length > 60 || /[,;]$/.test(premiere)) {
-        lignes.unshift(premiere); // la 1re ligne était un vers, pas un titre
+        lignes.unshift(premiere);
         titre = titreRepli;
     }
 
-    const vers = lignes.slice(0, nombreVers); // trop de vers : on coupe
-    if (vers.length < Math.ceil(nombreVers * 0.75)) return null; // beaucoup trop court : on rejette
+    const vers = lignes.slice(0, nombreVers);
+    if (vers.length < Math.ceil(nombreVers * 0.75)) return null;
 
     const strophes = [];
     for (let i = 0; i < vers.length; i += 4) strophes.push(vers.slice(i, i + 4).join('\n'));
@@ -226,7 +222,7 @@ async function poemeParIA(prompt, nombreVers, themeChoisi) {
         if (!f.cle) continue;
         for (const modele of f.modeles) {
             for (let essai = 1; essai <= 2; essai++) {
-                if (Date.now() - debut > 60000) return null; // on ne fait pas attendre indéfiniment
+                if (Date.now() - debut > 60000) return null;
                 try {
                     const brut = await f.appeler(modele, system, user);
                     const poeme = mettreEnForme(brut, nombreVers, titreRepli);
@@ -234,7 +230,7 @@ async function poemeParIA(prompt, nombreVers, themeChoisi) {
                     console.warn(`[IA] ${f.nom}/${modele} : réponse inexploitable (essai ${essai}) → "${String(brut).slice(0, 100).replace(/\n/g, ' / ')}"`);
                 } catch (e) {
                     console.error(`[IA] ${f.nom}/${modele} : ${e.message}`);
-                    break; // erreur d'API (modèle inconnu, quota…) : inutile de réessayer, modèle suivant
+                    break;
                 }
             }
         }
@@ -243,15 +239,12 @@ async function poemeParIA(prompt, nombreVers, themeChoisi) {
 }
 
 // ============================================================
-//  MOTEUR DE SECOURS (utilisé seulement si l'IA est indisponible)
-//  Pas de mots tirés au hasard : des strophes écrites à la main,
-//  cohérentes en elles-mêmes, assemblées dans l'ordre
-//  ouverture → développement → tournant → clôture.
+//  MOTEUR DE SECOURS
 // ============================================================
 const BANQUE = {
     amour: {
         ouv: [
-            ["Avant toi, j'habitais des jours sans fenêtre,",
+            ["Avant toi, j'habitais des jours sans fenêtres,",
              "Je comptais les saisons comme on compte la monnaie ;",
              "Puis tu as ri, et j'ai senti renaître",
              "Un pays tout entier que mon âme ignorait."],
@@ -494,7 +487,6 @@ const TITRES_DEFAUT = {
     general: 'Ce qui demeure'
 };
 
-// Pour le thème « Libre » : on repère le thème le plus proche de la demande
 const MOTS_CLES = {
     amour: ['amour', 'aimer', 'aime', 'baiser', 'desir', 'passion', 'tendresse', 'coeur', 'epoux', 'epouse', 'mari', 'femme', 'cheri', 'etreinte', 'couple', 'fiance'],
     tristesse: ['triste', 'tristesse', 'chagrin', 'perte', 'perdu', 'deuil', 'mort', 'disparu', 'manque', 'absence', 'solitude', 'pleur', 'larme', 'adieu', 'rupture', 'seul', 'seule', 'pluie', 'melanc', 'nostalg', 'souffrance', 'douleur', 'regret'],
@@ -543,7 +535,7 @@ function genererPoemeLocal(prompt, nombreVers, themeChoisi) {
     return `${titreLocal(prompt, theme)}\n\n${strophes.map(s => s.join('\n')).join('\n\n')}`;
 }
 
-// ============ ROUTE API ============
+// ============ ROUTES API ============
 app.post('/generate-poem', async (req, res) => {
     if (tropDeRequetes(req.ip)) {
         return res.status(429).json({ error: 'Trop de demandes en peu de temps : patiente une minute.' });
@@ -575,8 +567,10 @@ app.post('/generate-poem', async (req, res) => {
     console.log(`[poème] thème=${themeChoisi} vers=${nombreVers} source=${source}`);
     res.json({ poem: poeme, source });
 });
-// Health check pour Render
+
+// ✅ NOUVEAU : health check pour Render
 app.get('/health', (req, res) => res.json({ ok: true }));
+
 const PORT = process.env.PORT || 10000;
 if (require.main === module) {
     app.listen(PORT, () => {
