@@ -5,80 +5,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plume d'Étoile - Générateur de Poèmes</title>
     <style>
+        * { box-sizing: border-box; }
         body {
             font-family: 'Georgia', serif;
-            background: #121214;
+            background-color: #0a0c14;
+            background-image:
+                radial-gradient(1px 1px at 15% 25%, rgba(255,255,255,.35) 50%, transparent 50%),
+                radial-gradient(1px 1px at 70% 15%, rgba(255,255,255,.25) 50%, transparent 50%),
+                radial-gradient(1.5px 1.5px at 85% 60%, rgba(255,255,255,.3) 50%, transparent 50%),
+                radial-gradient(1px 1px at 30% 80%, rgba(255,255,255,.2) 50%, transparent 50%),
+                radial-gradient(1.5px 1.5px at 55% 45%, rgba(255,255,255,.25) 50%, transparent 50%),
+                radial-gradient(ellipse at 50% -20%, rgba(189,147,249,.12), transparent 60%);
             color: #e2e8f0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
+            padding: 24px;
         }
         .container {
-            background: #1e1e24;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-            max-width: 500px;
+            background: rgba(22, 24, 38, .82);
+            backdrop-filter: blur(8px);
+            padding: 34px;
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,.08);
+            box-shadow: 0 20px 60px rgba(0,0,0,.55);
+            max-width: 560px;
             width: 100%;
         }
-        h1 { text-align: center; color: #ff79c6; margin-bottom: 5px; font-size: 2em;}
-        .subtitle { text-align: center; color: #aaa; margin-top: 0; margin-bottom: 25px; font-size: 0.9em;}
-        
-        label { display: block; margin: 15px 0 5px; color: #bd93f9; font-weight: bold; font-size: 0.95em;}
-        
-        textarea, select, button {
+        h1 {
+            text-align: center;
+            margin: 0 0 6px;
+            font-size: 2.3em;
+            background: linear-gradient(90deg, #ff79c6, #bd93f9);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .subtitle { text-align: center; color: #8b90a7; margin: 0 0 26px; font-size: .92em; }
+
+        label {
+            display: block;
+            margin: 16px 0 6px;
+            color: #bd93f9;
+            font-weight: bold;
+            font-size: .8em;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }
+        textarea, select {
             width: 100%;
-            padding: 12px;
-            margin-bottom: 5px;
-            border-radius: 6px;
-            border: 1px solid #44475a;
-            background: #282a36;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #2c2f45;
+            background: #161826;
             color: #f8f8f2;
-            box-sizing: border-box;
             font-size: 14px;
             font-family: inherit;
         }
-        textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
+        textarea { resize: vertical; min-height: 90px; }
         textarea:focus, select:focus {
             outline: none;
             border-color: #ff79c6;
+            box-shadow: 0 0 0 3px rgba(255,121,198,.15);
         }
-        button {
-            background: #ff79c6;
+
+        #generateBtn {
+            width: 100%;
+            margin-top: 22px;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ff79c6, #bd93f9);
             color: #fff;
             font-weight: bold;
-            cursor: pointer;
-            border: none;
-            transition: 0.2s;
-            margin-top: 15px;
             font-size: 16px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: filter .15s, transform .15s;
         }
-        button:hover { background: #ff92df; }
-        button:disabled { 
-            background: #6272a4; 
-            cursor: not-allowed; 
-            opacity: 0.7;
+        #generateBtn:hover:not(:disabled) { filter: brightness(1.12); transform: translateY(-1px); }
+        #generateBtn:disabled {
+            background: #3a3f58;
+            color: #9aa0b8;
+            cursor: not-allowed;
         }
-        
+
         .output {
-            margin-top: 25px;
-            padding: 20px;
-            background: #282a36;
+            margin-top: 26px;
+            padding: 24px;
+            background: rgba(255,255,255,.03);
+            border: 1px solid rgba(255,255,255,.08);
             border-left: 4px solid #ff79c6;
-            border-radius: 4px;
-            white-space: pre-wrap;
-            font-style: italic;
-            line-height: 1.8;
-            color: #f8f8f2;
+            border-radius: 10px;
             display: none;
         }
+        .poem-title {
+            color: #ff92df;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 14px;
+        }
+        .poem-body {
+            white-space: pre-wrap;
+            font-style: italic;
+            line-height: 1.9;
+            color: #e8eaf2;
+        }
+        .poem-body.loading { color: #8b90a7; }
+        .copyBtn {
+            margin-top: 16px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #bd93f9;
+            background: transparent;
+            color: #bd93f9;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background .15s;
+        }
+        .copyBtn:hover { background: rgba(189,147,249,.12); }
     </style>
 </head>
 <body>
@@ -86,17 +134,17 @@
 <div class="container">
     <h1>Plume d'Étoile</h1>
     <p class="subtitle">Décrivez le poème que vous souhaitez obtenir</p>
-    
+
     <label for="prompt">Votre demande :</label>
-    <textarea id="prompt" placeholder="Ex: Un amour perdu sous la pluie, la solitude d'un phare..."></textarea>
+    <textarea id="prompt" placeholder="Ex : Juliette, un amour perdu sous la pluie, la solitude d'un phare..."></textarea>
 
     <label for="theme">Thème :</label>
     <select id="theme">
-        <option value="libre"> Libre (Mélange de tous les styles)</option>
+        <option value="libre">Libre (Mélange de tous les styles)</option>
         <option value="amour">💕 Amour</option>
         <option value="tristesse">😢 Tristesse</option>
         <option value="nature">🌿 Nature</option>
-        <option value="nuit"> Nuit</option>
+        <option value="nuit">Nuit</option>
         <option value="espoir">✨ Espoir</option>
     </select>
 
@@ -115,57 +163,79 @@
 </div>
 
 <script>
-    document.getElementById('generateBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('generateBtn');
+    const resultDiv = document.getElementById('result');
+    let currentPoem = '';
+
+    function esc(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function renderPoem(poem) {
+        const idx = poem.indexOf('\n');
+        const title = idx === -1 ? poem : poem.slice(0, idx).trim();
+        const body = idx === -1 ? '' : poem.slice(idx + 1).trim();
+        resultDiv.innerHTML =
+            `<div class="poem-title">${esc(title)}</div>` +
+            `<div class="poem-body">${esc(body)}</div>` +
+            `<button class="copyBtn" id="copyBtn">📋 Copier le poème</button>`;
+        document.getElementById('copyBtn').onclick = async () => {
+            try {
+                await navigator.clipboard.writeText(currentPoem);
+                const b = document.getElementById('copyBtn');
+                b.innerText = '✅ Copié !';
+                setTimeout(() => b.innerText = '📋 Copier le poème', 1500);
+            } catch (e) {}
+        };
+    }
+
+    btn.addEventListener('click', async () => {
         const promptText = document.getElementById('prompt').value;
         const linesCount = document.getElementById('lines').value;
         const themeSelected = document.getElementById('theme').value;
-        const resultDiv = document.getElementById('result');
-        const btn = document.getElementById('generateBtn');
 
         if (!promptText.trim()) {
             alert("Dis-moi quel genre de poème tu veux générer !");
             return;
         }
 
-        // Désactiver le bouton et lancer le compte à rebours de 15 secondes
+        // Compte à rebours de 3 secondes
         btn.disabled = true;
-        let timeLeft = 15;
+        let timeLeft = 3;
         btn.innerText = `Patientez... ${timeLeft}s`;
-        
         const countdown = setInterval(() => {
             timeLeft--;
-            if (timeLeft > 0) {
-                btn.innerText = `Patientez... ${timeLeft}s`;
-            } else {
-                clearInterval(countdown);
-                btn.disabled = false;
-                btn.innerText = "✨ Composer le poème";
-            }
+            if (timeLeft > 0) btn.innerText = `Patientez... ${timeLeft}s`;
+            else { clearInterval(countdown); btn.innerText = '✨ Composer le poème'; }
         }, 1000);
 
-        // Afficher le message de chargement
         resultDiv.style.display = 'block';
-        resultDiv.innerText = "L'inspiration vient... composition en cours...";
+        resultDiv.innerHTML = `<div class="poem-body loading">L'inspiration vient... composition en cours...</div>`;
+
+        const requete = fetch('/generate-poem', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: promptText, lines: linesCount, theme: themeSelected })
+        }).then(r => r.json());
 
         try {
-            const response = await fetch('/generate-poem', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    prompt: promptText,
-                    lines: linesCount,
-                    theme: themeSelected
-                })
-            });
+            // Attend au minimum 3 s (le temps du compte à rebours), même si le serveur répond plus vite
+            const [data] = await Promise.all([requete, new Promise(r => setTimeout(r, 3000))]);
+            clearInterval(countdown);
+            btn.disabled = false;
+            btn.innerText = '✨ Composer le poème';
 
-            const data = await response.json();
             if (data.poem) {
-                resultDiv.innerText = data.poem;
+                currentPoem = data.poem;
+                renderPoem(data.poem);
             } else {
-                resultDiv.innerText = "Erreur : " + data.error;
+                resultDiv.innerHTML = `<div class="poem-body loading">Erreur : ${esc(data.error || 'inconnue')}</div>`;
             }
         } catch (error) {
-            resultDiv.innerText = "Impossible de se connecter au serveur.";
+            clearInterval(countdown);
+            btn.disabled = false;
+            btn.innerText = '✨ Composer le poème';
+            resultDiv.innerHTML = `<div class="poem-body loading">Impossible de se connecter au serveur.</div>`;
         }
     });
 </script>
