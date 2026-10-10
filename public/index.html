@@ -114,6 +114,11 @@
             color: #e8eaf2;
         }
         .poem-body.loading { color: #8b90a7; }
+        .note {
+            margin-top: 14px;
+            font-size: .8em;
+            color: #8b90a7;
+        }
         .copyBtn {
             margin-top: 16px;
             padding: 8px 16px;
@@ -136,15 +141,15 @@
     <p class="subtitle">Décrivez le poème que vous souhaitez obtenir</p>
 
     <label for="prompt">Votre demande :</label>
-    <textarea id="prompt" placeholder="Ex : Juliette, un amour perdu sous la pluie, la solitude d'un phare..."></textarea>
+    <textarea id="prompt" maxlength="300" placeholder="Ex : un amour perdu sous la pluie, la solitude d'un phare, le dernier été de l'enfance..."></textarea>
 
     <label for="theme">Thème :</label>
     <select id="theme">
-        <option value="libre">Libre (Mélange de tous les styles)</option>
+        <option value="libre">Libre (le poète choisit)</option>
         <option value="amour">💕 Amour</option>
         <option value="tristesse">😢 Tristesse</option>
         <option value="nature">🌿 Nature</option>
-        <option value="nuit">Nuit</option>
+        <option value="nuit">🌙 Nuit</option>
         <option value="espoir">✨ Espoir</option>
     </select>
 
@@ -171,13 +176,17 @@
         return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    function renderPoem(poem) {
+    function renderPoem(poem, source) {
         const idx = poem.indexOf('\n');
         const title = idx === -1 ? poem : poem.slice(0, idx).trim();
         const body = idx === -1 ? '' : poem.slice(idx + 1).trim();
+        const note = source === 'local'
+            ? `<div class="note">✦ Poème de secours : l'inspiration (IA) est momentanément indisponible. Réessaie un peu plus tard pour une version plus personnelle.</div>`
+            : '';
         resultDiv.innerHTML =
             `<div class="poem-title">${esc(title)}</div>` +
             `<div class="poem-body">${esc(body)}</div>` +
+            note +
             `<button class="copyBtn" id="copyBtn">📋 Copier le poème</button>`;
         document.getElementById('copyBtn').onclick = async () => {
             try {
@@ -227,7 +236,7 @@
 
             if (data.poem) {
                 currentPoem = data.poem;
-                renderPoem(data.poem);
+                renderPoem(data.poem, data.source);
             } else {
                 resultDiv.innerHTML = `<div class="poem-body loading">Erreur : ${esc(data.error || 'inconnue')}</div>`;
             }
